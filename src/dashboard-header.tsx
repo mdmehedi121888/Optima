@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import { ChevronLeft, ChevronRight, Settings, SkipForward } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -122,6 +123,7 @@ export function DashboardHeader() {
 
       
     </div>
+  );
   );
 }
 
