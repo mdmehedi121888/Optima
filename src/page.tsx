@@ -1,8 +1,10 @@
-import { DashboardHeader } from "./dashboard-header";
-import { PerformanceChart } from "./performance-chart";
-import { ProductionTimeline } from "./production-timeline";
-import { StatusBar } from "./status-bar";
-import { BatchInfo } from "./batch-info";
+"use client";
+
+import { DashboardHeader } from "./dashboardHeader";
+import { PerformanceChart } from "./performanceChart";
+import { ProductionTimeline } from "./productionTimeline";
+import { BatchInfo } from "./batchInfo";
+import { StatusBar } from "./components/StatusBar";
 import { useState, useCallback } from "react";
 
 export interface Shift {
@@ -18,28 +20,59 @@ export interface Shift {
 export default function Page() {
   const [selectedStation, setSelectedStation] = useState("Internal Line");
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [productionQty, setProductionQty] = useState<number>(0);
 
-  // Memoize the callback to keep it stable across renders
   const handleSelectionChange = useCallback((station: string, shift: Shift | null) => {
     setSelectedStation(station);
     setSelectedShift(shift);
-  }, []); // Empty dependency array since it only uses setState functions
+    setProductionQty(0); // Reset when station or shift changes
+  }, []);
+
+  const handleProductionUpdate = useCallback((production: number) => {
+    setProductionQty(production);
+  }, []);
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col">
-      <DashboardHeader onSelectionChange={handleSelectionChange} />
-      <div className="flex-1 grid grid-cols-12 gap-4 p-4">
-        <div className="col-span-5 border border-indigo-600">
-          <BatchInfo />
+    <div className="min-h-screen bg-[#0B1E32] text-white flex flex-col">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-10 bg-gray-900 border-b border-gray-700 shadow-lg">
+        <div className="px-6 py-4">
+          <DashboardHeader onSelectionChange={handleSelectionChange} />
         </div>
-        <div className="col-span-7 border border-indigo-600">
-          <PerformanceChart />
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Batch Info */}
+          <div className="md:col-span-5 bg-gray-900 rounded-xl shadow-lg border border-gray-700 p-6">
+            <BatchInfo
+              station={selectedStation}
+              shift={selectedShift?.shiftName || ""}
+              productionQty={productionQty}
+            />
+          </div>
+
+          {/* Performance Chart */}
+          <div className="md:col-span-7 bg-gray-900 rounded-xl shadow-lg border border-gray-700 p-6">
+            <PerformanceChart />
+          </div>
+
+          {/* Production Timeline */}
+          <div className="md:col-span-12 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
+            <ProductionTimeline
+              station={selectedStation}
+              shift={selectedShift}
+              onProductionUpdate={handleProductionUpdate}
+            />
+          </div>
         </div>
-        <div className="col-span-12 border border-indigo-600">
-          <ProductionTimeline station={selectedStation} shift={selectedShift} />
-        </div>
-      </div>
-      <StatusBar stations={selectedStation} shift={selectedShift}/>
+      </main>
+
+      {/* Sticky Footer */}
+      <footer className="sticky bottom-0 z-10 bg-gray-900 border-t border-transparent bg-gradient-to-r from-green-500/20 to-indigo-500/20 shadow-lg">
+        <StatusBar stations={selectedStation} shift={selectedShift} />
+      </footer>
     </div>
   );
 }

@@ -19,6 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./components/NotFound";
 import Sidebar from "./components/Sidebar";
 import Layout from "./components/Layout";
+import { Bounce, ToastContainer } from "react-toastify";
 
 
 function App() {
@@ -51,6 +52,19 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      <ToastContainer
+position="top-right"
+autoClose={2000}
+hideProgressBar={false}
+newestOnTop={false}
+closeOnClick={false}
+rtl={false}
+pauseOnFocusLoss
+draggable
+pauseOnHover
+theme="colored"
+transition={Bounce}
+/>
     </div>
   );
 }

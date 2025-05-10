@@ -58,38 +58,51 @@ export function PerformanceChart() {
   }, []);
 
   return (
-    <div className="h-full pt-2">
-      <div className="flex justify-between items-start mb-2 ml-5">
-        {/* <div className="flex items-baseline gap-2">
-          <span className="text-5xl font-bold tabular-nums">21%</span>
-          <span className="text-gray-400">OEE (60%)</span>
-        </div> */}
-        <div className="flex items-left gap-8 text-sm">
-          <span className="text-gray-400 text-base ">
-            pcs/h
-            <hr></hr>
+    <div className="p-6 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
+      {/* Header Section */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-baseline gap-2">
+          <span className="text-4xl font-extrabold text-white tabular-nums tracking-tight">
+            21%
           </span>
-          <span className="text-gray-400 ">OEE</span>
+          <span className="text-lg text-gray-400">OEE (Target: 60%)</span>
+        </div>
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex flex-col items-center">
+            <span className="text-gray-400 font-semibold uppercase tracking-wider">
+              pcs/h
+            </span>
+            <div className="h-0.5 w-12 bg-green-500 rounded-full mt-1" />
+          </div>
+          <span className="text-gray-400 font-semibold uppercase tracking-wider">
+            OEE
+          </span>
         </div>
       </div>
-      <div className="h-[180px] -ml-4">
+
+      {/* Chart Section */}
+      <div className="bg-gray-800/50 rounded-lg p-4 hover:shadow-xl transition-shadow duration-300">
         <LineChart
           data={data}
-          margin={{ top: 5, right: 20, bottom: 5, left: 10 }}
+          margin={{ top: 10, right: 20, bottom: 10, left: 10 }}
           width={1000}
           height={250}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#4B5563" // gray-600
+            vertical={false}
+          />
           <XAxis
             dataKey="time"
-            stroke="#666"
-            tick={{ fill: "#666", fontSize: 12 }}
+            stroke="#9CA3AF" // gray-400
+            tick={{ fill: "#9CA3AF", fontSize: 12 }}
             tickSize={8}
             tickMargin={8}
           />
           <YAxis
-            stroke="#666"
-            tick={{ fill: "#666", fontSize: 12 }}
+            stroke="#9CA3AF"
+            tick={{ fill: "#9CA3AF", fontSize: 12 }}
             domain={[0, 600]}
             ticks={[0, 100, 200, 300, 400, 500, 600]}
             tickSize={8}
@@ -98,16 +111,18 @@ export function PerformanceChart() {
           <Line
             type="stepAfter"
             dataKey="value"
-            stroke="#fff"
+            stroke="#FFFFFF" // white
             dot={false}
             strokeWidth={2}
+            activeDot={{ r: 6, fill: "#10B981" }} // green-500
           />
           <Line
             type="monotone"
             dataKey="target"
-            stroke="#666"
+            stroke="#6B7280" // gray-500
             strokeDasharray="5 5"
             dot={false}
+            strokeWidth={1}
           />
         </LineChart>
       </div>

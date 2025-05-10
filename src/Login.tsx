@@ -2,6 +2,7 @@ import { LockKeyhole, User, Eye, EyeOff, LogIn } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { Bounce, toast } from "react-toastify";
 import Swal from "sweetalert2";
 
 interface LoginFormInputs {
@@ -28,23 +29,31 @@ const LoginForm: React.FC = () => {
       const result = await response.json();
 
       if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Login Successful",
-          text: "Redirecting...",
-          position: "center",
-          timer: 2000,
-          showConfirmButton: false,
-        }).then(() => {
-          navigate("/"); // Redirect after login
-        });
+       
+        toast.success('Login Successful!', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Bounce,
+          });
+          navigate("/");
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Login Failed",
-          position: "center",
-          text: result.message,
-        });
+        toast.error('Login Failed!', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Bounce,
+          });
       }
     } catch (error) {
       console.error("Login error:", error);
