@@ -45,7 +45,7 @@ export default function Page() {
       <main className="flex-1 p-6">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Batch Info */}
-          <div className="md:col-span-5 bg-gray-900 rounded-xl shadow-lg border border-gray-700 p-6">
+          <div className="md:col-span-5 flex items-center justify-center bg-gray-900 rounded-xl shadow-lg border border-gray-700 p-6">
             <BatchInfo
               station={selectedStation}
               shift={selectedShift?.shiftName || ""}

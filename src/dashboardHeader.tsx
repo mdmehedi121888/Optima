@@ -76,6 +76,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
   return (
     <div className="h-16 border-b border-gray-800 px-4 flex items-center justify-between relative">
       <div className="flex items-center gap-4">
+        
         {!sidebarOpen && (
           <AlignJustify className="cursor-pointer" onClick={() => setSidebarOpen(true)} />
         )}
@@ -84,6 +85,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
             <Sidebar onClose={() => setSidebarOpen(false)} />
           </div>
         )}
+
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <button
@@ -161,6 +163,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
           <Settings className="w-5 h-5" />
         </button>
       </div>
+      
     </div>
   );
 }

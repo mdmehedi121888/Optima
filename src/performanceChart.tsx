@@ -34,7 +34,7 @@ export function PerformanceChart() {
 
     setData(generateData());
 
-    // Update every 15 seconds
+    // Update every 60 seconds
     const interval = setInterval(() => {
       setData((prev) => {
         const now = new Date();
@@ -52,7 +52,7 @@ export function PerformanceChart() {
         ];
         return newData;
       });
-    }, 15000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -81,7 +81,7 @@ export function PerformanceChart() {
       </div>
 
       {/* Chart Section */}
-      <div className="bg-gray-800/50 rounded-lg p-4 hover:shadow-xl transition-shadow duration-300">
+      <div className="bg-gray-800/50 rounded-lg p-4 hover:shadow-xl transition-shadow duration-300 overflow-x-hidden">
         <LineChart
           data={data}
           margin={{ top: 10, right: 20, bottom: 10, left: 10 }}
@@ -126,6 +126,7 @@ export function PerformanceChart() {
           />
         </LineChart>
       </div>
+      
     </div>
   );
 }

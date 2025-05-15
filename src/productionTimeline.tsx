@@ -272,7 +272,7 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
         }
       }
 
-      console.log("Selected active product:", activeProduct);
+      // console.log("Selected active product:", activeProduct);
 
       // Use cycleTime and unitsPerSensorSignal
       const cycleTime = activeProduct ? Number(activeProduct.cycleTime) || 240 : 240;
@@ -486,11 +486,11 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
                       title={tooltip}
                       className={`
                         relative
-                        ${slot.downtimeStatuses[i].status === "planned" ? "bg-gray-800" : ""}
+                        ${slot.downtimeStatuses[i].status === "planned" ? "bg-[#3674B5]" : ""}
                         ${slot.downtimeStatuses[i].status === "unplanned" ? "bg-red-900" : ""}
-                        ${slot.statuses[i] === "red" ? "bg-red-500" : ""}
-                        ${slot.statuses[i] === "green" ? "bg-green-500" : ""}
-                        ${slot.statuses[i] === "yellow" ? "bg-yellow-500" : ""}
+                        ${slot.statuses[i] === "red" ? "bg-[#E52020]" : ""}
+                        ${slot.statuses[i] === "green" ? "bg-[#0AAC00]" : ""}
+                        ${slot.statuses[i] === "yellow" ? "bg-[#FFEB00]" : ""}
                         
                         hover:opacity-80 transition-opacity duration-200
                       `}

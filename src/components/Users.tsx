@@ -366,6 +366,7 @@ const handleDelete = async () => {
 
                     <select {...register("role")} className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
                       <option value="">Role</option>
+                      <option value="Super Admin">Super Admin</option>
                       <option value="Office User">Office User</option>
                       <option value="Shift View User">Shift View User</option>
                     </select>

@@ -71,7 +71,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data: ProductRecord[] = await response.json();
-      console.log("Fetched product records:", data);
+      // console.log("Fetched product records:", data);
 
       const records: ProductRecord[] = Array.isArray(data)
         ? data.map((item) => ({
@@ -94,7 +94,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
           }))
         : [];
 
-      console.log("Mapped records:", records);
+      // console.log("Mapped records:", records);
 
       // Determine current batch and calculate quantities
       const currentTime = new Date("2025-04-29T15:00:00"); // Mock time for testing
@@ -147,7 +147,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
         }
       }
 
-      console.log("Selected active product:", activeProduct);
+      // console.log("Selected active product:", activeProduct);
 
       setCurrentBatch(foundBatch);
 
@@ -156,15 +156,16 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
         const target = calculateTargetQty(activeProduct);
         setTargetQty(target);
 
-        const oeeValue = target > 0 ? Math.min((productionQty / target) * 100, 100) : 0;
+        const oeeValue = target > 0 ? (productionQty / target) * 100 : 0;
+        // console.log("production qty and target: ",productionQty,target);
         setOee(Number(oeeValue.toFixed(2)));
 
         setError(null);
       } else {
-        console.log("No active product found or invalid times");
+        // console.log("No active product found or invalid times");
         setTargetQty(0);
         setOee(0);
-        setError("No active product found for the current time");
+        // setError("No active product found for the current time");
       }
     } catch (error) {
       console.error("Error fetching product records:", error);
@@ -194,7 +195,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
       const durationMinutes = endMinutes - startMinutes;
       const target = durationMinutes * unitsPerMinute;
 
-      console.log(`Target quantity for product ID ${product.id}: ${target} (duration: ${durationMinutes} minutes, ${unitsPerMinute} units/minute)`);
+      // console.log(`Target quantity for product ID ${product.id}: ${target} (duration: ${durationMinutes} minutes, ${unitsPerMinute} units/minute)`);
       return target;
     } catch (error) {
       console.error("Error calculating target quantity:", error);
@@ -209,7 +210,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
   }, [station, shift]);
 
   return (
-    <div className="p-6 bg-gray-900 rounded-xl shadow-lg border border-gray-700 space-y-6">
+    <div className="p-6 bg-gray-900 rounded-xl flex-1 shadow-lg border border-gray-700 space-y-6">
       {/* Error Message */}
       {error && (
         <div className="bg-red-500/10 border border-red-500 text-red-400 p-4 rounded-lg flex items-center gap-2 animate-pulse">
@@ -250,7 +251,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
               OEE
             </span>
             <span className="text-4xl font-extrabold text-green-400 tabular-nums">
-              {oee}%
+              {((productionQty/targetQty)*100).toFixed(2)}%
             </span>
           </div>
         </div>
@@ -266,6 +267,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
           {currentBatch}
         </div>
       </div>
+      
     </div>
   );
 }
