@@ -1,11 +1,11 @@
 "use client";
 
 import { DashboardHeader } from "./dashboardHeader";
-import { PerformanceChart } from "./performanceChart";
 import { ProductionTimeline } from "./productionTimeline";
 import { BatchInfo } from "./batchInfo";
 import { StatusBar } from "./components/StatusBar";
 import { useState, useCallback } from "react";
+import { PerformanceChart } from "./performanceChart";
 
 export interface Shift {
   id: number;
@@ -21,6 +21,7 @@ export default function Page() {
   const [selectedStation, setSelectedStation] = useState("Internal Line");
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [productionQty, setProductionQty] = useState<number>(0);
+  const [hourlyOEE, setHourlyOEE] = useState<{ hour: string; oee: number }[]>([]); // New state for hourly OEE
 
   const handleSelectionChange = useCallback((station: string, shift: Shift | null) => {
     setSelectedStation(station);
@@ -30,6 +31,10 @@ export default function Page() {
 
   const handleProductionUpdate = useCallback((production: number) => {
     setProductionQty(production);
+  }, []);
+
+  const handleHourlyOEEUpdate = useCallback((hourlyOEEData: { hour: string; oee: number }[]) => {
+    setHourlyOEE(hourlyOEEData);
   }, []);
 
   return (
@@ -55,7 +60,12 @@ export default function Page() {
 
           {/* Performance Chart */}
           <div className="md:col-span-7 bg-gray-900 rounded-xl shadow-lg border border-gray-700 p-6">
-            <PerformanceChart />
+            <PerformanceChart
+              station={selectedStation}
+              shift={selectedShift?.shiftName || ""}
+              productionQty={productionQty}
+              hourlyOEE={hourlyOEE} // Pass hourly OEE prop
+            />
           </div>
 
           {/* Production Timeline */}
@@ -64,6 +74,7 @@ export default function Page() {
               station={selectedStation}
               shift={selectedShift}
               onProductionUpdate={handleProductionUpdate}
+              onHourlyOEEUpdate={handleHourlyOEEUpdate} // Pass callback for hourly OEE
             />
           </div>
         </div>

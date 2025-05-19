@@ -211,6 +211,8 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
 
   return (
     <div className="p-6 bg-gray-900 rounded-xl flex-1 shadow-lg border border-gray-700 space-y-6">
+     
+     
       {/* Error Message */}
       {error && (
         <div className="bg-red-500/10 border border-red-500 text-red-400 p-4 rounded-lg flex items-center gap-2 animate-pulse">

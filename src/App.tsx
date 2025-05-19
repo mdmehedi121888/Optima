@@ -20,6 +20,12 @@ import NotFound from "./components/NotFound";
 import Sidebar from "./components/Sidebar";
 import Layout from "./components/Layout";
 import { Bounce, ToastContainer } from "react-toastify";
+import AdminRoute from "./components/AdminRoute";
+import NotAuthenticated from "./components/NotAuthenticated";
+import FactoryOverview from "./components/FactoryOverview";
+import Dashboards from "./components/Dashboards";
+import Reports from "./components/Reports";
+import InchargeRoute from "./components/InchargeRoute";
 
 
 function App() {
@@ -29,22 +35,29 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginForm />} />
           <Route path="/logout" element={<Logout />} />
+          <Route path="/not-authenticated" element={<NotAuthenticated />} />
 
           {/* ✅ Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Page />} />
-            <Route path="/settings" element={<Settings />} />
             <Route element={<Layout />}>
-            <Route path="/settings/users" element={<Users />} />
             <Route path="/settings/profile" element={<Profile />} />
-            <Route path="/settings/operators" element={<Operators />} />
-            <Route path="/settings/stop-reasons" element={<StopReason />} />
-            <Route path="/settings/speed-loss-reasons" element={<SpeedLossReasons />} />
-            <Route path="/settings/scrap-reasons" element={<ScrapReasons />} />
-            <Route path="/settings/locations" element={<Locations />} />
-            <Route path="/settings/stations" element={<Stations />} />
-            <Route path="/settings/products" element={<Products />} />
-            <Route path="/settings/shifts" element={<Shifts />} />
+
+                  <Route element={<InchargeRoute />}>
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/settings/users" element={<Users />} />
+                    <Route path="/settings/operators" element={<Operators />} />
+                    <Route path="/settings/stop-reasons" element={<StopReason />} />
+                    <Route path="/settings/speed-loss-reasons" element={<SpeedLossReasons />} />
+                    <Route path="/settings/scrap-reasons" element={<ScrapReasons />} />
+                    <Route path="/settings/locations" element={<Locations />} />
+                    <Route path="/settings/stations" element={<Stations />} />
+                    <Route path="/settings/products" element={<Products />} />
+                    <Route path="/settings/shifts" element={<Shifts />} />
+                    <Route path="/factory-overview" element={<FactoryOverview />} />
+                    <Route path="/dashboards" element={<Dashboards />} />
+                    <Route path="/reports" element={<Reports />} />
+                </Route>
             </Route>
             </Route>
 

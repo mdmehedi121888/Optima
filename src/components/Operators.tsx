@@ -11,30 +11,27 @@ import {
   LaptopMinimal,
   UsersRound,
   Calendar,
-  Plus, X,
+  Plus,
+  X,
   AlignLeft,
   EyeOff,
-  Eye
+  Eye,
 } from "lucide-react";
-import { useState,useEffect  } from "react";
-import Sidebar from "./Sidebar";
-import SubSidebar from "./SubSidebar";
-import HandleSidebar from "./HandleSidebar";
-import { useForm,SubmitHandler } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
 
-
 interface OperatorFormData {
-    userId: string;
-    password: string;
-    role: string;
-    stations: string[];
-    shift: string;
-  }
+  userId: string;
+  password: string;
+  role: string;
+  stations: string[];
+  shift: string;
+}
 
-  
 interface Operator {
   id: number;
+  password: string;
   userName: string;
   userImage: string;
   userId: string;
@@ -43,211 +40,233 @@ interface Operator {
 }
 
 interface SettingItem {
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-    link: string;
-  }
-  
-  const settings: SettingItem[] = [
-    {
-      icon: <User size={24} className="text-yellow-500" />, 
-      title: "Hi, User",
-      description: "Manage your basic information — name, profile picture, email, and language.",
-      link: "/profile",
-    },
-    {
-        icon: <UsersRound size={24} className="text-yellow-500" />, 
-        title: "Users",
-      description: "Control who has access to Evocon in your company and what rights they should have.",
-      link: "/settings/users",
-    },
-    {
-      icon: <UsersRound size={24} className="text-green-500" />,
-      title: "Operators",
-      description: "Manage the names of your operators and the stations where they are working.",
-      link: "/operators",
-    },
-    {
-      icon: <AlertTriangle size={24} className="text-red-500" />,
-      title: "Stop reasons",
-      description: "Manage reasons that operators use to comment on production downtime.",
-      link: "/stop-reasons",
-    },
-    {
-      icon: <Gauge size={24} className="text-yellow-500" />,
-      title: "Speed loss reasons",
-      description: "Manage reasons that operators use to comment on speed loss.",
-      link: "/speed-loss-reasons",
-    },
-    {
-      icon: <Trash2 size={24} className="text-orange-500" />,
-      title: "Scrap reasons",
-      description: "Manage reasons that operators use to comment on quality loss.",
-      link: "/scrap-reasons",
-    },
-    {
-      icon: <MapPin size={24} className="text-red-500" />,
-      title: "Locations",
-      description: "Use locations to get more insight into production downtime.",
-      link: "/locations",
-    },
-    {
-      icon: <LaptopMinimal size={24} className="text-blue-500" />,
-      title: "Stations",
-      description: "Adjust station settings, like OEE targets, notification emails & empty shift reason.",
-      link: "/stations",
-    },
-    {
-      icon: <Package size={24} className="text-black" />,
-      title: "Products",
-      description: "View and manage all the products and their settings produced in your company.",
-      link: "/products",
-    },
-    {
-      icon: <Calendar size={24} className="text-black" />,
-      title: "Shifts",
-      description: "Define the work schedule of each station in your factory.",
-      link: "/settings/shifts",
-    },
-  ];
-  
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  link: string;
+}
+
+const settings: SettingItem[] = [
+  {
+    icon: <User size={24} className="text-yellow-500" />,
+    title: "Hi, User",
+    description: "Manage your basic information — name, profile picture, email, and language.",
+    link: "/profile",
+  },
+  {
+    icon: <UsersRound size={24} className="text-yellow-500" />,
+    title: "Users",
+    description: "Control who has access to Evocon in your company and what rights they should have.",
+    link: "/settings/users",
+  },
+  {
+    icon: <UsersRound size={24} className="text-green-500" />,
+    title: "Operators",
+    description: "Manage the names of your operators and the stations where they are working.",
+    link: "/operators",
+  },
+  {
+    icon: <AlertTriangle size={24} className="text-red-500" />,
+    title: "Stop reasons",
+    description: "Manage reasons that operators use to comment on production downtime.",
+    link: "/stop-reasons",
+  },
+  {
+    icon: <Gauge size={24} className="text-yellow-500" />,
+    title: "Speed loss reasons",
+    description: "Manage reasons that operators use to comment on speed loss.",
+    link: "/speed-loss-reasons",
+  },
+  {
+    icon: <Trash2 size={24} className="text-orange-500" />,
+    title: "Scrap reasons",
+    description: "Manage reasons that operators use to comment on quality loss.",
+    link: "/scrap-reasons",
+  },
+  {
+    icon: <MapPin size={24} className="text-red-500" />,
+    title: "Locations",
+    description: "Use locations to get more insight into production downtime.",
+    link: "/locations",
+  },
+  {
+    icon: <LaptopMinimal size={24} className="text-blue-500" />,
+    title: "Stations",
+    description: "Adjust station settings, like OEE targets, notification emails & empty shift reason.",
+    link: "/stations",
+  },
+  {
+    icon: <Package size={24} className="text-black" />,
+    title: "Products",
+    description: "View and manage all the products and their settings produced in your company.",
+    link: "/products",
+  },
+  {
+    icon: <Calendar size={24} className="text-black" />,
+    title: "Shifts",
+    description: "Define the work schedule of each station in your factory.",
+    link: "/settings/shifts",
+  },
+];
 
 export default function Operators() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<Operator | null>(null);
-  const { register,watch, handleSubmit, setValue, reset } = useForm<OperatorFormData>();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const { register, watch, handleSubmit, setValue, reset } = useForm<OperatorFormData>({
+    defaultValues: {
+      userId: "",
+      password: "",
+      role: "",
+      stations: [],
+      shift: "",
+    },
+  });
   const [users, setUsers] = useState<Operator[]>([]);
 
-
-
-// Use Effect to populate form when editing
-useEffect(() => {
+  // Use Effect to populate form when editing
+  useEffect(() => {
     if (isEditModalOpen && selectedUser) {
       setValue("userId", selectedUser.userId);
+      setValue("password", selectedUser.password);
       setValue("stations", selectedUser.stations?.split(", ") || []);
-      setValue("shift", selectedUser.shift );
-
+      setValue("shift", selectedUser.shift);
     } else {
-      reset(); // Clear form when adding a new user
+      reset(); // Clear form when adding a new operator
     }
   }, [isEditModalOpen, selectedUser, setValue, reset]);
-
 
   const fetchUsers = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/operators", {
         method: "GET",
-        credentials: "include", // ✅ Include cookies for session authentication
-      });        if (!response.ok) {
-            throw new Error("Failed to fetch users");
-        }
-        const data = await response.json();
-        setUsers(data); 
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch operators: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setUsers(data);
     } catch (error) {
-        console.error("Error fetching users:", error);
+      console.error("Error fetching operators:", error);
     }
-};
+  };
 
-// Call fetchUsers inside useEffect on component mount
-useEffect(() => {
+  // Call fetchUsers inside useEffect on component mount
+  useEffect(() => {
     fetchUsers();
-}, []);
+  }, []);
 
-  
-
-  const selectedStations = watch("stations", []); 
+  const selectedStations = watch("stations", []);
 
   const openAddUserModal = () => {
+    setSelectedUser(null); // Clear selectedUser
+    reset(); // Reset form fields
+    setShowPassword(false); // Reset password visibility
     setIsModalOpen(true);
   };
 
   const openEditUserModal = (user: Operator) => {
     setSelectedUser(user);
+    setShowPassword(false); // Reset password visibility
     setIsEditModalOpen(true);
   };
 
   const onSubmit: SubmitHandler<OperatorFormData> = async (data) => {
     try {
-        let picUrl = "";
-        let empName = "";
+      if (selectedUser && !selectedUser.id) {
+        throw new Error("Selected operator ID is missing");
+      }
 
-        if (!selectedUser) {
-            // ✅ Fetch additional user data only when creating a new user
-            const externalResponse = await fetch(`http://capi.waltonbd.com/api.php?report_id=6&code=${data.userId}`);
-            if (!externalResponse.ok) {
-                throw new Error("Failed to fetch external API data");
-            }
-            const externalData = await externalResponse.json(); // ✅ Convert response to JSON
+      let picUrl = "";
+      let empName = "";
 
-            // ✅ Extract required fields
-            picUrl = externalData?.PIC_URL_ || ""; 
-            empName = externalData?.EMP_NAME || "";
+      if (!selectedUser) {
+        const externalResponse = await fetch(`https://whrmsapi.waltonbd.com/info/emp_info.php?emp_id=${data.userId}`);
+        if (!externalResponse.ok) {
+          throw new Error("Failed to fetch external API data");
         }
+        const externalData = await externalResponse.json();
+        picUrl = externalData?.PIC_URL_ || "";
+        empName = externalData?.EMP_NAME || "";
+      }
 
-        // ✅ Prepare the payload with additional data
-        const payload = {
-            ...data,
-            stations: data.stations?.join(", ") || "",
-            userImage: picUrl,   // ✅ Include image URL
-            userName: empName,  // ✅ Include employee name
-        };
+      const payload = {
+        ...data,
+        stations: data.stations?.join(", ") || "",
+        userImage: picUrl,
+        userName: empName,
+      };
 
-        const url = selectedUser 
-            ? `http://localhost:5000/api/operators/${selectedUser.id}` 
-            : "http://localhost:5000/api/operators";
-        const method = selectedUser ? "PUT" : "POST";
+      console.log("Submitting payload:", payload);
 
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-        });
+      const url = selectedUser
+        ? `http://localhost:5000/api/operators/${selectedUser.id}`
+        : "http://localhost:5000/api/operators";
+      const method = selectedUser ? "PUT" : "POST";
 
-        if (!response.ok) {
-            Swal.fire({
-                position: "center",
-                icon: "error",
-                title: selectedUser ? "Operator Update Failed!" : "Operator Insert Failed!",
-                showConfirmButton: false,
-                timer: 2000,
-            });
-            return;
-        }
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Failed to ${selectedUser ? "update" : "insert"} operator: ${response.status} - ${errorText}`);
         Swal.fire({
-            position: "center",
-            icon: "success",
-            title: selectedUser ? "Operator Updated Successfully!!" : "Operator Inserted Successfully!!",
-            showConfirmButton: false,
-            timer: 2000,
-        }).then(() => {
-            setIsModalOpen(false);
-            setIsEditModalOpen(false);
-            fetchUsers();
+          position: "center",
+          icon: "error",
+          title: selectedUser ? "Operator Update Failed!" : "Operator Insert Failed!",
+          text: `Error: ${errorText || response.statusText}`,
+          showConfirmButton: true,
         });
+        return;
+      }
 
-    } catch (error) {
-        console.error("Error:", error);
-        Swal.fire({
-            position: "center",
-            icon: "error",
-            title: "An error occurred!",
-            text: "Please try again.",
-            showConfirmButton: true,
-        });
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: selectedUser ? "Operator Updated Successfully!!" : "Operator Inserted Successfully!!",
+        showConfirmButton: false,
+        timer: 2000,
+      }).then(() => {
+        setIsModalOpen(false);
+        setIsEditModalOpen(false);
+        setSelectedUser(null); // Clear selectedUser after submission
+        setShowPassword(false); // Reset password visibility
+        fetchUsers();
+        reset();
+      });
+    } catch (error:any) {
+      console.error("Error in onSubmit:", error);
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: "An error occurred!",
+        text: error.message || "Please try again.",
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedUser || !selectedUser.id) {
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: "No operator selected!",
+        text: "Please select an operator to delete.",
+        showConfirmButton: true,
+      });
+      return;
     }
 
-    reset();
-};
-
-const handleDelete = async () => {
-  if (!selectedUser) return;
-
-  const confirmDelete = await Swal.fire({
+    const confirmDelete = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
       icon: "warning",
@@ -255,160 +274,196 @@ const handleDelete = async () => {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
-  });
+    });
 
-  if (confirmDelete.isConfirmed) {
+    if (confirmDelete.isConfirmed) {
       try {
-          const response = await fetch(`http://localhost:5000/api/operators/${selectedUser.id}`, {
-              method: "DELETE",
-          });
+        const response = await fetch(`http://localhost:5000/api/operators/${selectedUser.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
 
-          if (!response.ok) {
-              throw new Error("Failed to delete operator");
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Failed to delete operator: ${response.status} - ${errorText}`);
+          throw new Error(`Failed to delete operator: ${errorText || response.statusText}`);
+        }
 
-          Swal.fire({
-              title: "Deleted!",
-              text: "Operator has been deleted.",
-              icon: "success",
-              timer: 2000,
-              showConfirmButton: false,
-          });
+        Swal.fire({
+          title: "Deleted!",
+          text: "Operator has been deleted.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
 
-          setIsEditModalOpen(false);
-          fetchUsers(); // Refresh the list
-      } catch (error) {
-          console.error("Error deleting operator:", error);
-          Swal.fire({
-              title: "Error!",
-              text: "Failed to delete operator.",
-              icon: "error",
-              showConfirmButton: true,
-          });
+        setIsEditModalOpen(false);
+        setSelectedUser(null); // Clear selectedUser after deletion
+        setShowPassword(false); // Reset password visibility
+        fetchUsers();
+        reset();
+      } catch (error:any) {
+        console.error("Error deleting operator:", error);
+        Swal.fire({
+          title: "Error!",
+          text: error.message || "Failed to delete operator.",
+          icon: "error",
+          showConfirmButton: true,
+        });
       }
-  }
-};
+    }
+  };
 
-
-    return (
-        <div className="flex min-h-screen bg-gray-100">
-          <div className="w-4/5 p-6">
-            <div className="flex justify-between items-center mb-4 max-w-[90rem] mx-auto">
-              <h1 className="text-3xl font-bold">Operators</h1>
-              <button onClick={openAddUserModal} className="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-600 transition">
-                <Plus className="w-5 h-5 mr-2 font-bold" /> <span className="font-bold">OPERATOR</span>
-              </button>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg max-w-7xl mx-auto overflow-hidden">
-            <div className="overflow-x-auto">
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      <div className="w-4/5 p-6">
+        <div className="flex justify-between items-center mb-4 max-w-[90rem] mx-auto">
+          <h1 className="text-3xl font-bold">Operators</h1>
+          <button
+            onClick={openAddUserModal}
+            className="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-600 transition"
+          >
+            <Plus className="w-5 h-5 mr-2 font-bold" /> <span className="font-bold">OPERATOR</span>
+          </button>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-lg max-w-7xl mx-auto overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full border-collapse rounded-lg overflow-hidden">
-            {/* Table Header */}
-            <thead className="bg-gradient-to-r from-[#141E30] to-[#243B55] text-white uppercase text-sm tracking-wider">
+              <thead className="bg-gradient-to-r from-[#141E30] to-[#243B55] text-white uppercase text-sm tracking-wider">
                 <tr>
-                <th className="p-3 text-center">ID</th>
-                <th className="p-3 text-center">Name</th>
-                <th className="p-3 text-center">Image</th>
-                <th className="p-3 text-center">Stations</th>
-                <th className="p-3 text-center">Shift</th>
+                  <th className="p-3 text-center">ID</th>
+                  <th className="p-3 text-center">Name</th>
+                  <th className="p-3 text-center">Image</th>
+                  <th className="p-3 text-center">Stations</th>
+                  <th className="p-3 text-center">Shift</th>
                 </tr>
-            </thead>
-
-            {/* Table Body */}
-            <tbody className="divide-y divide-gray-200 text-gray-700">
+              </thead>
+              <tbody className="divide-y divide-gray-200 text-gray-700">
                 {users.map((user, index) => (
-                <tr 
-                    key={user.id} 
+                  <tr
+                    key={user.id}
                     className={`cursor-pointer hover:bg-green-100 transition duration-200 ${
-                    index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     }`}
                     onClick={() => openEditUserModal(user)}
-                >
+                  >
                     <td className="p-3 font-semibold text-center">{user.userId}</td>
                     <td className="p-3 font-semibold text-center">{user.userName}</td>
-                    <td className="p-3 font-semibold text-center"> <img src={`https://hrms.waltonbd.com/${user.userImage}`} className="h-24 w-24 mx-auto rounded-full object-contain" alt="User" /> </td>
+                    <td className="p-3 font-semibold text-center">
+                      <img
+                        src={`https://hrms.waltonbd.com/${user.userImage}`}
+                        className="h-24 w-24 mx-auto rounded-full object-contain"
+                        alt="User"
+                      />
+                    </td>
                     <td className="p-3 text-center">{user.stations}</td>
                     <td className="p-3 text-center">{user.shift}</td>
-                </tr>
+                  </tr>
                 ))}
-            </tbody>
+              </tbody>
             </table>
-        </div>
+          </div>
         </div>
 
-            {(isModalOpen || isEditModalOpen) && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-md">
-                <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] md:w-[600px] lg:w-[900px] relative">
-                  <div className="flex justify-between items-center border-b pb-3">
-                    <h2 className="text-2xl font-semibold">{isModalOpen ? "Add New Operator" : "Edit Operator"}</h2>
-                    <button onClick={() => { setIsModalOpen(false); setIsEditModalOpen(false); }} className="text-gray-500 hover:text-gray-700">
-                      <X className="w-6 h-6" />
-                    </button>
-                  </div>
-                  <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-                  <input {...register("userId")} placeholder="User ID" className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"/>
-                    <div className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
-                    <h1 className="text-left font-semibold text-lg p-2">Station</h1>
-
-                    {["Final Line", "Internal Line", "External Line", "Valve Plate"].map((station, index) => (
+        {(isModalOpen || isEditModalOpen) && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-md">
+            <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] md:w-[600px] lg:w-[900px] max-h-[90vh] overflow-y-auto relative">
+              <div className="flex justify-between items-center border-b pb-3 sticky top-0 bg-white z-10">
+                <h2 className="text-2xl font-semibold">{isModalOpen ? "Add New Operator" : "Edit Operator"}</h2>
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setIsEditModalOpen(false);
+                    setSelectedUser(null); // Clear selectedUser when closing modal
+                    setShowPassword(false); // Reset password visibility
+                    reset(); // Reset form when closing modal
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+                <input
+                  {...register("userId")}
+                  placeholder="User ID"
+                  className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <div className="relative w-full">
+                  <input
+                    {...register("password")}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <div className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
+                  <h1 className="text-left font-semibold text-lg p-2">Station</h1>
+                  {["Final Line", "Internal Line", "External Line", "Valve Plate"].map((station, index) => (
                     <label key={index} className="flex items-center space-x-2 px-2 py-1">
-                        <input
+                      <input
                         type="checkbox"
                         {...register("stations")}
                         value={station}
                         className="form-checkbox text-green-500 focus:ring-green-500"
                         defaultChecked={selectedUser?.stations?.includes(station)}
-                        />
-                        <span>{station}</span>
+                      />
+                      <span>{station}</span>
                     </label>
-                    ))}
-
-                   </div>
-                   <div className="">
-
-                  <select
-                    {...register("shift")}
-                    className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                    defaultValue={selectedUser?.shift || ""}
+                  ))}
+                </div>
+                <select
+                  {...register("shift")}
+                  className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="" disabled>Select Shift</option>
+                  <option value="Day">Day</option>
+                  <option value="Evening">Evening</option>
+                  <option value="Morning">Morning</option>
+                  <option value="Night">Night</option>
+                </select>
+                <div className="mt-5 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setIsEditModalOpen(false);
+                      setSelectedUser(null); // Clear selectedUser when canceling
+                      setShowPassword(false); // Reset password visibility
+                      reset(); // Reset form when canceling
+                    }}
+                    className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
                   >
-                    <option value="" disabled>Select Shift</option>
-                    <option value="Day">Day</option>
-                    <option value="Evening">Evening</option>
-                    <option value="Morning">Morning</option>
-                    <option value="Night">Night</option>
-                  </select>
-                </div>
-
-
-              <div className="mt-5 flex justify-end gap-2">
-                  <button 
-                      type="button" 
-                      onClick={() => { setIsModalOpen(false); setIsEditModalOpen(false); }} 
-                      className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
-                      Cancel
+                    Cancel
                   </button>
-
                   {isEditModalOpen && (
-                      <button 
-                          type="button" 
-                          onClick={handleDelete} 
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
-                          Delete
-                      </button>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                    >
+                      Delete
+                    </button>
                   )}
-
-                  <button 
-                      type="submit" 
-                      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
-                      {isModalOpen ? "Save" : "Update"}
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                  >
+                    {isModalOpen ? "Save" : "Update"}
                   </button>
-              </div>
-
-                  </form>
                 </div>
-              </div>
-            )}
-
+              </form>
+            </div>
           </div>
-        </div>
-      );
+        )}
+      </div>
+    </div>
+  );
 }

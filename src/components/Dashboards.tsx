@@ -1,6 +1,6 @@
 
 
-export default function ScrapReasons() {
+export default function Dashboards() {
   
 
   return (

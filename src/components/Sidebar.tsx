@@ -18,7 +18,8 @@ interface User {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
-  const [user, setUser] = useState<User | null>(null); // Explicitly define the type
+  const [user, setUser] = useState<User | null>(null); 
+  const [userRole, setUserRole] = useState<String | null>(null); 
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,6 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         const data = await response.json();
         if (data.isAuthenticated) {
           setUser(data.user);
+          setUserRole(data.user.role);
         }
       } catch (error) {
         console.error("Error fetching user session:", error);
@@ -50,31 +52,45 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
       {/* Menu Items */}
       <ul className="space-y-4 px-6 mt-4">
+        
         <Link to={"/"}>
           <li className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded cursor-pointer">
             <Clock size={20} /> Shift View
           </li>
         </Link>
-        <Link to={"/settings"}>
+        
+        {userRole !== 'Operator' && <>
+
+       
+
+        <Link to={"/factory-overview"}>
           <li className="flex items-center gap-3 p-2 mt-3 hover:bg-gray-700 rounded cursor-pointer">
             <Factory size={20} /> Factory Overview
           </li>
         </Link>
-        <Link to={"/settings"}>
+
+        <Link to={"/dashboards"}>
           <li className="flex items-center gap-3 p-2 mt-3 hover:bg-gray-700 rounded cursor-pointer">
             <LayoutDashboard size={20} /> Dashboards
           </li>
         </Link>
-        <Link to={"/settings"}>
+
+        <Link to={"/reports"}>
           <li className="flex items-center gap-3 p-2 mt-3 hover:bg-gray-700 rounded cursor-pointer">
             <FileText size={20} /> Reports
           </li>
         </Link>
-        <Link to={"/settings"}>
+  
+          <Link to={"/settings"}>
           <li className="flex items-center gap-3 p-2 mt-3 hover:bg-gray-700 rounded cursor-pointer">
             <Settings size={20} /> Settings
           </li>
         </Link>
+  </>
+}
+
+        
+       
         <Link to={"/logout"}>
           <li className="flex items-center gap-3 p-2 mt-3 hover:bg-red-700 rounded cursor-pointer">
             <LogOut size={20} /> Log Out
@@ -98,6 +114,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <span className="font-semibold">{user?.userName || "Profile"}</span>
           </li>
         </Link>
+
+
       </ul>
     </div>
   );

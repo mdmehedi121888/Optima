@@ -29,11 +29,10 @@ interface ProductFormData {
   productName: string;
   productCode: string;
   productGroup: string;
-  cycleTime:string;
+  cycleTime: string;
   unitsPerSensorSignal: string;
   stations: string[];
   unit: string;
- 
 }
 
 interface Product {
@@ -120,7 +119,7 @@ const settings: SettingItem[] = [
 export default function Products() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-  const [selectedProduct, setselectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { register, watch, handleSubmit, setValue, reset } = useForm<ProductFormData>();
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -146,7 +145,7 @@ export default function Products() {
         credentials: "include",
       });
       if (!response.ok) {
-        throw new Error("Failed to fetch products");
+        throw new Error(`Failed to fetch products: ${response.statusText}`);
       }
       const data = await response.json();
       setProducts(data);
@@ -163,20 +162,29 @@ export default function Products() {
   const selectedStations = watch("stations", []);
 
   const openAddProductModal = () => {
+    setSelectedProduct(null); // Clear selectedProduct
+    reset(); // Reset form fields
     setIsModalOpen(true);
   };
 
   const openEditProductModal = (product: Product) => {
-    setselectedProduct(product);
+    setSelectedProduct(product);
     setIsEditModalOpen(true);
   };
 
   const onSubmit: SubmitHandler<ProductFormData> = async (data) => {
     try {
+      if (selectedProduct && !selectedProduct.id) {
+        throw new Error("Selected product ID is missing");
+      }
+
       const payload = {
         ...data,
         stations: data.stations?.join(", ") || "",
       };
+
+      console.log("Submitting payload:", payload);
+
       const url = selectedProduct
         ? `http://localhost:5000/api/products/${selectedProduct.id}`
         : "http://localhost:5000/api/products";
@@ -187,16 +195,19 @@ export default function Products() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Failed to ${selectedProduct ? "update" : "insert"} product: ${response.status} - ${errorText}`);
         Swal.fire({
           position: "center",
           icon: "error",
           title: selectedProduct ? "Product Update Failed!" : "Product Insert Failed!",
-          showConfirmButton: false,
-          timer: 2000,
+          text: `Error: ${errorText || response.statusText}`,
+          showConfirmButton: true,
         });
         return;
       }
@@ -210,24 +221,33 @@ export default function Products() {
       }).then(() => {
         setIsModalOpen(false);
         setIsEditModalOpen(false);
+        setSelectedProduct(null); // Clear selectedProduct after submission
         fetchProducts();
+        reset();
       });
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (error:any) {
+      console.error("Error in onSubmit:", error);
       Swal.fire({
         position: "center",
         icon: "error",
         title: "An error occurred!",
-        text: "Please try again.",
+        text: error.message || "Please try again.",
         showConfirmButton: true,
       });
     }
-
-    reset();
   };
 
   const handleDelete = async () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct || !selectedProduct.id) {
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: "No product selected!",
+        text: "Please select a product to delete.",
+        showConfirmButton: true,
+      });
+      return;
+    }
 
     const confirmDelete = await Swal.fire({
       title: "Are you sure?",
@@ -243,10 +263,13 @@ export default function Products() {
       try {
         const response = await fetch(`http://localhost:5000/api/products/${selectedProduct.id}`, {
           method: "DELETE",
+          credentials: "include",
         });
 
         if (!response.ok) {
-          throw new Error("Failed to delete product");
+          const errorText = await response.text();
+          console.error(`Failed to delete product: ${response.status} - ${errorText}`);
+          throw new Error(`Failed to delete product: ${errorText || response.statusText}`);
         }
 
         Swal.fire({
@@ -258,12 +281,13 @@ export default function Products() {
         });
 
         setIsEditModalOpen(false);
+        setSelectedProduct(null); // Clear selectedProduct after deletion
         fetchProducts();
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error deleting product:", error);
         Swal.fire({
           title: "Error!",
-          text: "Failed to delete product.",
+          text: error.message || "Failed to delete product.",
           icon: "error",
           showConfirmButton: true,
         });
@@ -286,7 +310,6 @@ export default function Products() {
         <div className="bg-white p-6 rounded-xl shadow-lg max-w-7xl mx-auto overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse rounded-lg overflow-hidden">
-              {/* Table Header */}
               <thead className="bg-gradient-to-r from-[#141E30] to-[#243B55] text-white uppercase text-sm tracking-wider">
                 <tr>
                   <th className="p-3 text-center">Product Name</th>
@@ -298,30 +321,24 @@ export default function Products() {
                   <th className="p-3 text-center">Units Per Sensor Signal</th>
                 </tr>
               </thead>
-
-              {/* Table Body */}
               <tbody className="divide-y divide-gray-200 text-gray-700">
-                {products.map((product, index) => {
-                 
-                  return (
-                    <tr
-                      key={product.id}
-                      className={`cursor-pointer hover:bg-green-100 transition duration-200 ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      }`}
-                      onClick={() => openEditProductModal(product)}
-                    >
-                      <td className="p-3 font-semibold text-center">{product.productName}</td>
-                      <td className="p-3 font-semibold text-center">{product.productCode}</td>
-                      <td className="p-3 font-semibold text-center">{product.productGroup}</td>
-                      <td className="p-3 text-center">{product.stations}</td>
-                      <td className="p-3 text-center">{product.unit}</td>
-                      <td className="p-3 text-center">{product.cycleTime}</td>
-                      <td className="p-3 text-center">{product.unitsPerSensorSignal}</td>
-                     
-                    </tr>
-                  );
-                })}
+                {products.map((product, index) => (
+                  <tr
+                    key={product.id}
+                    className={`cursor-pointer hover:bg-green-100 transition duration-200 ${
+                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                    }`}
+                    onClick={() => openEditProductModal(product)}
+                  >
+                    <td className="p-3 font-semibold text-center">{product.productName}</td>
+                    <td className="p-3 font-semibold text-center">{product.productCode}</td>
+                    <td className="p-3 font-semibold text-center">{product.productGroup}</td>
+                    <td className="p-3 text-center">{product.stations}</td>
+                    <td className="p-3 text-center">{product.unit}</td>
+                    <td className="p-3 text-center">{product.cycleTime}</td>
+                    <td className="p-3 text-center">{product.unitsPerSensorSignal}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -329,13 +346,15 @@ export default function Products() {
 
         {(isModalOpen || isEditModalOpen) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-md">
-            <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] md:w-[600px] lg:w-[900px] relative">
-              <div className="flex justify-between items-center border-b pb-3">
+            <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] md:w-[600px] lg:w-[900px] max-h-[90vh] overflow-y-auto relative">
+              <div className="flex justify-between items-center border-b pb-3 sticky top-0 bg-white z-10">
                 <h2 className="text-2xl font-semibold">{isModalOpen ? "Add New Product" : "Edit Product"}</h2>
                 <button
                   onClick={() => {
                     setIsModalOpen(false);
                     setIsEditModalOpen(false);
+                    setSelectedProduct(null); // Clear selectedProduct when closing modal
+                    reset(); // Reset form when closing modal
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -358,10 +377,8 @@ export default function Products() {
                   placeholder="Product Group"
                   className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-
                 <div className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
                   <h1 className="text-left font-semibold text-lg p-2">Station</h1>
-
                   {["Final Line", "Internal Line", "External Line", "Valve Plate"].map((station, index) => (
                     <label key={index} className="flex items-center space-x-2 px-2 py-1">
                       <input
@@ -387,76 +404,65 @@ export default function Products() {
                 </select>
                 <h1 className="text-center font-semibold text-lg">Product Speed</h1>
                 <div className="bg-gray-100 flex flex-col items-center p-4 space-y-8">
-  {/* Train Blocks with Legends */}
-  <div className="flex flex-col md:flex-row items-center gap-8">
-    
-    {/* Green Train */}
-    <div className="flex flex-col items-center space-y-2">
-      <div className="flex">
-        <div className="flex bg-green-700 h-16 w-40"></div>
-      </div>
-      <div className="flex items-center bg-gray-200 px-4 py-2 rounded text-sm text-gray-700">
-        <span className="w-3 h-3 bg-green-500 rounded-full inline-block mr-2"></span>
-        ≤14 sec
-      </div>
-    </div>
-
-    {/* Yellow + Green Train */}
-    <div className="flex flex-col items-center space-y-2">
-      <div className="flex">
-        <div className="bg-yellow-400 h-16 w-40"></div>
-      </div>
-      <div className="flex items-center bg-gray-200 px-4 py-2 rounded text-sm text-gray-700">
-        <span className="w-3 h-3 bg-yellow-400 rounded-full inline-block mr-2"></span>
-        ≤180 sec +
-        <span className="w-3 h-3 bg-green-500 rounded-full inline-block mx-2"></span>
-        14 sec
-      </div>
-    </div>
-
-    {/* Red + Green Train */}
-    <div className="flex flex-col items-center space-y-2">
-      <div className="flex">
-        <div className="bg-red-600 h-16 w-40"></div>
-      </div>
-      <div className="flex items-center bg-gray-200 px-4 py-2 rounded text-sm text-gray-700">
-        <span className="w-3 h-3 bg-red-600 rounded-full inline-block mr-2"></span>
-        ≤180 sec +
-        <span className="w-3 h-3 bg-green-500 rounded-full inline-block mx-2"></span>
-        14 sec
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-
-                <div className="flex flex-col md:flex-row gap-4 mt-4">
-                <div className="relative w-full">
-              <input
-                {...register("cycleTime")}
-                placeholder="Ideal cycle time"
-                className="w-full border border-green-500 px-4 py-2 pr-16 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                pcs/h
-              </span>
-            </div>
-
-                <input
-                  {...register("unitsPerSensorSignal")}
-                  placeholder="Number of units registered per one sensor signal"
-                  className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
+                  <div className="flex flex-col md:flex-row items-center gap-8">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="flex">
+                        <div className="bg-green-700 h-16 w-40"></div>
+                      </div>
+                      <div className="flex items-center bg-gray-200 px-4 py-2 rounded text-sm text-gray-700">
+                        <span className="w-3 h-3 bg-green-500 rounded-full inline-block mr-2"></span>
+                        ≤14 sec
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="flex">
+                        <div className="bg-yellow-400 h-16 w-40"></div>
+                      </div>
+                      <div className="flex items-center bg-gray-200 px-4 py-2 rounded text-sm text-gray-700">
+                        <span className="w-3 h-3 bg-yellow-400 rounded-full inline-block mr-2"></span>
+                        ≤180 sec +
+                        <span className="w-3 h-3 bg-green-500 rounded-full inline-block mx-2"></span>
+                        14 sec
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="flex">
+                        <div className="bg-red-600 h-16 w-40"></div>
+                      </div>
+                      <div className="flex items-center bg-gray-200 px-4 py-2 rounded text-sm text-gray-700">
+                        <span className="w-3 h-3 bg-red-600 rounded-full inline-block mr-2"></span>
+                        ≤180 sec +
+                        <span className="w-3 h-3 bg-green-500 rounded-full inline-block mx-2"></span>
+                        14 sec
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
+                <div className="flex flex-col md:flex-row gap-4 mt-4">
+                  <div className="relative w-full">
+                    <input
+                      {...register("cycleTime")}
+                      placeholder="Ideal cycle time"
+                      className="w-full border border-green-500 px-4 py-2 pr-16 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                      pcs/h
+                    </span>
+                  </div>
+                  <input
+                    {...register("unitsPerSensorSignal")}
+                    placeholder="Number of units registered per one sensor signal"
+                    className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
                 <div className="mt-5 flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       setIsModalOpen(false);
                       setIsEditModalOpen(false);
+                      setSelectedProduct(null); // Clear selectedProduct when canceling
+                      reset(); // Reset form when canceling
                     }}
                     className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
                   >

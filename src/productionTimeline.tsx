@@ -48,9 +48,10 @@ interface ProductionTimelineProps {
   station: string;
   shift: Shift | null;
   onProductionUpdate: (production: number) => void;
+  onHourlyOEEUpdate: (hourlyOEE: { hour: string; oee: number }[]) => void; // New prop for hourly OEE
 }
 
-export function ProductionTimeline({ station, shift, onProductionUpdate }: ProductionTimelineProps) {
+export function ProductionTimeline({ station, shift, onProductionUpdate, onHourlyOEEUpdate }: ProductionTimelineProps) {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [machineData, setMachineData] = useState<MachineData[]>([]);
   const [downtimeRecords, setDowntimeRecords] = useState<DowntimeFormData[]>([]);
@@ -190,9 +191,10 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
       if (!shift) {
         setTimeSlots([]);
         onProductionUpdate(0);
+        onHourlyOEEUpdate([]);
         return;
       }
-
+      // console.log("shift in production timeline: ", shift);
       const startHour = parseInt(shift.startTime.split(":")[0]);
       const endHour = parseInt(shift.endTime.split(":")[0]);
       const slots: TimeSlot[] = [];
@@ -224,7 +226,7 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
       }
 
       // Find active product
-      const currentTime = new Date("2025-04-29T15:00:00"); // Mock time
+      const currentTime = new Date("2025-05-19T12:16:00+06:00"); // Updated to current time: May 19, 2025, 12:16 PM +06
       let activeProduct: ProductRecord | null = null;
 
       for (const record of productRecords) {
@@ -272,10 +274,10 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
         }
       }
 
-      // console.log("Selected active product:", activeProduct);
-
       // Use cycleTime and unitsPerSensorSignal
-      const cycleTime = activeProduct ? Number(activeProduct.cycleTime) || 240 : 240;
+      const cycleTime = activeProduct
+        ? Number(activeProduct.cycleTime) * Number(activeProduct.unitsPerSensorSignal) || 500
+        : 500;
       const unitsPerSensorSignal = activeProduct ? Number(activeProduct.unitsPerSensorSignal) || 1 : 1;
       const productionThreshold = cycleTime / 60;
 
@@ -318,10 +320,10 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
 
       // Apply production-based statuses and calculate total production
       let totalProduction = 0;
+
       if (machineData.length > 1) {
         machineData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
-        const column = station.replace(" Line", "_line").toLowerCase();
+        const column = station.replace(" Line", "_line_diff").toLowerCase();
 
         const productionPerMinute: { [hour: number]: { [minute: number]: number } } = {};
         const lineDataPerMinute: { [hour: number]: { [minute: number]: number } } = {};
@@ -340,8 +342,7 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
 
         for (let i = 1; i < machineData.length; i++) {
           const current = machineData[i];
-          const previous = machineData[i - 1];
-          const production = (Number(current[column]) - Number(previous[column])) * unitsPerSensorSignal;
+          const production = Number(current[column]) * unitsPerSensorSignal;
 
           const timestamp = new Date(current.timestamp);
           const hour = timestamp.getHours();
@@ -385,6 +386,7 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
 
             const production = productionPerMinute[slot.hour]?.[minute] || 0;
             slot.production[minute] = production;
+            slot.hourlyProduction += production;
             if (production >= productionThreshold) {
               slot.statuses[minute] = "green";
               slot.markers[minute] = true;
@@ -397,29 +399,27 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
               slot.statuses[minute] = "red";
             }
           }
-
-          const hourData = lineDataPerMinute[slot.hour];
-          if (hourData) {
-            const minutes = Object.keys(hourData)
-              .map(Number)
-              .sort((a, b) => a - b);
-            if (minutes.length > 0) {
-              const firstMinute = minutes[0];
-              const lastMinute = minutes[minutes.length - 1];
-              slot.hourlyProduction = (hourData[lastMinute] - hourData[firstMinute]) * unitsPerSensorSignal;
-            }
-          }
         });
       }
 
-      // Update parent with total production
+      // Calculate hourly OEE and pass to parent
+      const hourlyOEE = slots.map((slot) => {
+        const oee = cycleTime > 0 ? (slot.hourlyProduction / cycleTime) * 100 : 0;
+        return {
+          hour: `${String(slot.hour).padStart(2, "0")}:00`,
+          oee: Number(oee.toFixed(2)),
+        };
+      });
+
+      // Update parent with total production and hourly OEE
       onProductionUpdate(totalProduction);
+      onHourlyOEEUpdate(hourlyOEE);
 
       setTimeSlots(slots);
     };
 
     generateTimeline();
-  }, [shift, machineData, station, downtimeRecords, productRecords, onProductionUpdate]);
+  }, [shift, machineData, station, downtimeRecords, productRecords, onProductionUpdate, onHourlyOEEUpdate]);
 
   return (
     <div className="p-6 bg-gray-900 rounded-xl shadow-lg border border-gray-700">
@@ -458,7 +458,10 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
       {/* Timeline */}
       <div className="space-y-1">
         {timeSlots.map((slot) => {
-          const cycleTime = productRecords.length > 0 ? Number(productRecords[0].cycleTime) || 240 : 240;
+          const cycleTime = productRecords.length > 0
+            ? Number(productRecords[0].cycleTime) * Number(productRecords[0].unitsPerSensorSignal) || 500
+            : 500;
+
           return (
             <div
               key={slot.hour}
@@ -491,7 +494,6 @@ export function ProductionTimeline({ station, shift, onProductionUpdate }: Produ
                         ${slot.statuses[i] === "red" ? "bg-[#E52020]" : ""}
                         ${slot.statuses[i] === "green" ? "bg-[#0AAC00]" : ""}
                         ${slot.statuses[i] === "yellow" ? "bg-[#FFEB00]" : ""}
-                        
                         hover:opacity-80 transition-opacity duration-200
                       `}
                     />
