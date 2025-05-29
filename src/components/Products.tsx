@@ -116,12 +116,42 @@ const settings: SettingItem[] = [
   },
 ];
 
+// ✅ Define TypeScript Interface for User
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
+}
+
 export default function Products() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { register, watch, handleSubmit, setValue, reset } = useForm<ProductFormData>();
   const [products, setProducts] = useState<Product[]>([]);
+   const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   // Use Effect to populate form when editing
   useEffect(() => {
@@ -181,9 +211,10 @@ export default function Products() {
       const payload = {
         ...data,
         stations: data.stations?.join(", ") || "",
+        creator: user?.userId
       };
 
-      console.log("Submitting payload:", payload);
+      // console.log("Submitting payload:", payload);
 
       const url = selectedProduct
         ? `http://localhost:5000/api/products/${selectedProduct.id}`

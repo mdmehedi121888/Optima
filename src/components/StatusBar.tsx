@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { StatusItem } from "./StatusItem";
 import { OperatorModal } from "./OperatorModal";
-import { ChangeoverModal } from "./ChangeoverModal";
 import { DowntimeModal } from "./DowntimeModal";
 import { DowntimeRecordsModal } from "./DowntimeRecordsModal";
 import { Clock, Users, RefreshCw, Zap, Trash, Mail } from "lucide-react";
+import { ProductChangeoverModal } from "./ProductChangeoverModal";
 
 interface Shift {
   shiftName: string;
@@ -24,14 +24,9 @@ interface Product {
   productName: string;
   productCode: string;
   productGroup: string;
-  stations: string;
-  unit: string;
   cycleTime: string;
   unitsPerSensorSignal: string;
-  is_active: number;
-  creator: string | null;
-  sys_date_time: string;
-  updated_at: string | null;
+  stations: string; // Added to match ProductChangeoverModal requirement
 }
 
 interface StatusCounts {
@@ -50,11 +45,11 @@ interface ChangeoverFormData {
 }
 
 interface DowntimeFormData {
+  id?: number;
   startTime: string;
   endTime: string;
+  problem_group: string;
   problem_name: string;
-  problemGroup: string;
-  problemReason: string;
   location: string;
   planned_status: "planned" | "unplanned";
 }
@@ -72,12 +67,11 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
   const [downtimeRecords, setDowntimeRecords] = useState<DowntimeFormData[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [showOperatorModal, setShowOperatorModal] = useState(false);
-  const [showChangeoverModal, setShowChangeoverModal] = useState(false);
+  const [showProductChangeoverModal, setShowProductChangeoverModal] = useState(false);
   const [showDowntimeRecordsModal, setShowDowntimeRecordsModal] = useState(false);
   const [showDowntimeFormModal, setShowDowntimeFormModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch operators data
   useEffect(() => {
     const fetchOperatorData = async () => {
       try {
@@ -117,7 +111,6 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     fetchOperatorData();
   }, [stations, shift]);
 
-  // Fetch downtime records data
   useEffect(() => {
     const fetchDowntimeRecordsData = async () => {
       try {
@@ -130,10 +123,10 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
 
         const records = Array.isArray(data)
           ? data.map((item: any) => ({
+              id: item.id || 0,
               startTime: item.startTime || "",
               endTime: item.endTime || "",
-              problemGroup: item.problemGroup || "",
-              problemReason: item.problemReason || "",
+              problem_group: item.problem_group || "",
               problem_name: item.problem_name || "",
               location: item.location || "",
               planned_status: item.planned_status || "unplanned",
@@ -155,7 +148,6 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     fetchDowntimeRecordsData();
   }, [stations, shift]);
 
-  // Fetch products data
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -170,14 +162,9 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
               productName: item.productName || "",
               productCode: item.productCode || "",
               productGroup: item.productGroup || "",
-              stations: item.stations || "",
-              unit: item.unit || "",
               cycleTime: item.cycleTime || "",
               unitsPerSensorSignal: item.unitsPerSensorSignal || "",
-              is_active: item.is_active || 0,
-              creator: item.creator || null,
-              sys_date_time: item.sys_date_time || "",
-              updated_at: item.updated_at || null,
+              stations: item.stations || stations, // Map stations, fallback to prop
             }))
           : [];
 
@@ -192,7 +179,6 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     fetchProducts();
   }, [stations]);
 
-  // Function to refresh downtime records
   const refreshDowntimeRecords = async () => {
     try {
       if (!stations || !shift?.shiftName) return;
@@ -204,10 +190,10 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
 
       const records = Array.isArray(data)
         ? data.map((item: any) => ({
+            id: item.id || 0,
             startTime: item.startTime || "",
             endTime: item.endTime || "",
-            problemGroup: item.problemGroup || "",
-            problemReason: item.problemReason || "",
+            problem_group: item.problem_group || "",
             problem_name: item.problem_name || "",
             location: item.location || "",
             planned_status: item.planned_status || "unplanned",
@@ -236,6 +222,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           {error}
         </div>
       )}
+      
       <div className="bg-gray-900 border-t border-transparent bg-gradient-to-r from-green-500/20 to-indigo-500/20 px-6 py-4 flex flex-wrap gap-6 items-center justify-between rounded-b-xl shadow-lg">
         <StatusItem
           icon={Users}
@@ -247,7 +234,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           icon={RefreshCw}
           label="Product Changeover"
           count={statusCounts.productChangeover}
-          onClick={() => setShowChangeoverModal(true)}
+          onClick={() => setShowProductChangeoverModal(true)}
         />
         <StatusItem
           icon={Clock}
@@ -275,14 +262,16 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
       {showOperatorModal && (
         <OperatorModal operators={operators} onClose={() => setShowOperatorModal(false)} />
       )}
-      {showChangeoverModal && (
-        <ChangeoverModal
+      
+      {showProductChangeoverModal && (
+        <ProductChangeoverModal
           products={products}
           stations={stations}
           shift={shift}
-          onClose={() => setShowChangeoverModal(false)}
+          onClose={() => setShowProductChangeoverModal(false)}
         />
       )}
+
       {showDowntimeRecordsModal && (
         <DowntimeRecordsModal
           downtimeRecords={downtimeRecords}
@@ -291,8 +280,13 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
             setShowDowntimeFormModal(true);
           }}
           onClose={() => setShowDowntimeRecordsModal(false)}
+          onUpdateSuccess={refreshDowntimeRecords}
+          stations={stations}
+          shift={shift}
+          products={products}
         />
       )}
+
       {showDowntimeFormModal && (
         <DowntimeModal
           stations={stations}

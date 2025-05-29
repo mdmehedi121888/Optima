@@ -114,12 +114,42 @@ const settings: SettingItem[] = [
   },
 ];
 
+// ✅ Define TypeScript Interface for User
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
+}
+
 export default function Stations() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const { register, watch, handleSubmit, setValue, reset } = useForm<StationFormData>();
   const [stations, setStations] = useState<Station[]>([]);
+   const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   // Use Effect to populate form when editing
   useEffect(() => {
@@ -174,6 +204,7 @@ export default function Stations() {
       const payload = {
         ...data,
         stations: data.stations?.join(", ") || "",
+        creator: user?.userId
       };
 
       const url = selectedStation

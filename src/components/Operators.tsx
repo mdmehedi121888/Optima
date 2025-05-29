@@ -109,11 +109,42 @@ const settings: SettingItem[] = [
   },
 ];
 
+// ✅ Define TypeScript Interface for User
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
+}
+
 export default function Operators() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<Operator | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+   const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   const { register, watch, handleSubmit, setValue, reset } = useForm<OperatorFormData>({
     defaultValues: {
       userId: "",
@@ -137,7 +168,7 @@ export default function Operators() {
     }
   }, [isEditModalOpen, selectedUser, setValue, reset]);
 
-  const fetchUsers = async () => {
+  const fetchOperators = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/operators", {
         method: "GET",
@@ -153,9 +184,9 @@ export default function Operators() {
     }
   };
 
-  // Call fetchUsers inside useEffect on component mount
+  // Call fetchOperators inside useEffect on component mount
   useEffect(() => {
-    fetchUsers();
+    fetchOperators();
   }, []);
 
   const selectedStations = watch("stations", []);
@@ -197,9 +228,10 @@ export default function Operators() {
         stations: data.stations?.join(", ") || "",
         userImage: picUrl,
         userName: empName,
+        creator: user?.userId
       };
 
-      console.log("Submitting payload:", payload);
+      // console.log("Submitting payload:", payload);
 
       const url = selectedUser
         ? `http://localhost:5000/api/operators/${selectedUser.id}`
@@ -239,7 +271,7 @@ export default function Operators() {
         setIsEditModalOpen(false);
         setSelectedUser(null); // Clear selectedUser after submission
         setShowPassword(false); // Reset password visibility
-        fetchUsers();
+        fetchOperators();
         reset();
       });
     } catch (error:any) {
@@ -300,7 +332,7 @@ export default function Operators() {
         setIsEditModalOpen(false);
         setSelectedUser(null); // Clear selectedUser after deletion
         setShowPassword(false); // Reset password visibility
-        fetchUsers();
+        fetchOperators();
         reset();
       } catch (error:any) {
         console.error("Error deleting operator:", error);

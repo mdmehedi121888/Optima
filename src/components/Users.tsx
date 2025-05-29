@@ -25,8 +25,7 @@ interface UserFormData {
 }
 
 interface User {
-  id: number;
-  
+    id: number;
     userName: string;
     userImage: string;
     role: string;
@@ -34,6 +33,7 @@ interface User {
     password: string;
     defaultStation: string;
     stations: string;
+    creator: string;
 
 }
 
@@ -107,6 +107,17 @@ const settings: SettingItem[] = [
     },
 ];
 
+// ✅ Define TypeScript Interface for User
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
+}
+
 export default function Users() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -114,6 +125,26 @@ export default function Users() {
   const { register, watch, handleSubmit, setValue, reset } = useForm<UserFormData>();
   const [users, setUsers] = useState<User[]>([]);
   const [showPassword, setShowPassword] = useState(false);
+   const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
 
   // Use Effect to populate form when editing
   useEffect(() => {
@@ -182,6 +213,7 @@ export default function Users() {
         stations: data.stations?.join(", ") || "",
         userImage: picUrl,
         userName: empName,
+        creator: user?.userId
       };
 
       const url = selectedUser

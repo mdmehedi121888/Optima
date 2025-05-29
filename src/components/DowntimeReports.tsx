@@ -117,13 +117,12 @@ export default function DowntimeReports() {
                 <td className="p-3 text-center">{record.station}</td>
                 <td className="p-3 text-center">{formatDate(record.productionDate)}</td>
                 <td className="p-3 text-center">{record.shift}</td>
-                <td className="p-3 text-center">{record.problem_name}</td>
+                <td className="p-3 text-center bg-pink-400 text-white">{record.problem_name}</td>
                 <td className="p-3 text-center">{record.startTime}</td>
                 <td className="p-3 text-center">{record.endTime}</td>
-                <td className="p-3 text-center">{calculateDuration(record.startTime, record.endTime)}</td>
+                <td className="p-3 text-center bg-purple-400 text-white">{calculateDuration(record.startTime, record.endTime)}</td>
                 <td className="p-3 text-center">{record.location}</td>
-                <td className="p-3 text-center">{record.planned_status}</td>
-              </tr>
+                <td className={`p-3 text-center text-white ${ record.planned_status === 'planned' ? 'bg-green-700' : 'bg-red-700' } rounded`} > {record.planned_status} </td>              </tr>
             ))}
           </tbody>
         </table>

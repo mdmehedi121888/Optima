@@ -12,7 +12,7 @@ export const Modal: FC<ModalProps> = ({ title, children, onClose }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300">
       <div
-        className="bg-gray-900/90 shadow-2xl border border-gray-700 p-6 rounded-xl w-full max-w-xl transform scale-95 transition-transform duration-300 hover:scale-100"
+        className="bg-gray-900/90 shadow-2xl border border-gray-700 p-6 rounded-xl w-full max-w-3xl transform scale-95 transition-transform duration-300 hover:scale-100"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center border-b border-gray-700 pb-3">

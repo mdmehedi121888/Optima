@@ -1,14 +1,19 @@
-// DowntimeModal.tsx
 import { FC, useEffect, useState } from "react";
-import Swal from "sweetalert2";
 import { Modal } from "./Modal";
+import Swal from "sweetalert2";
 
-// Define Shift interface
-interface Shift {
-  shiftName: string;
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
 }
 
 interface Product {
+  id: number;
   productName: string;
   productCode: string;
   productGroup: string;
@@ -16,42 +21,43 @@ interface Product {
   unitsPerSensorSignal: string;
 }
 
-interface ProblemGroup {
-  problem_groups: string;
-}
-
-interface ProblemReason {
-  problem_reasons: string;
-}
-
 interface DowntimeFormData {
+  productId?: string;
   startTime: string;
   endTime: string;
-  problemGroup: string;
-  problemReason: string;
+  problem_group: string;
+  problem_name: string;
   location: string;
   planned_status: "planned" | "unplanned";
 }
 
 interface DowntimeModalProps {
   stations: string;
-  shift: Shift | null;
+  shift: { shiftName: string } | null;
   products: Product[];
   onClose: () => void;
   onSubmitSuccess: () => void;
 }
 
-export const DowntimeModal: FC<DowntimeModalProps> = ({ stations, shift, products, onClose, onSubmitSuccess }) => {
+export const DowntimeModal: FC<DowntimeModalProps> = ({
+  stations,
+  shift,
+  products,
+  onClose,
+  onSubmitSuccess,
+}) => {
+  const [user, setUser] = useState<UserType | null>(null);
   const [formData, setFormData] = useState<DowntimeFormData>({
     startTime: "",
     endTime: "",
-    problemGroup: "",
-    problemReason: "",
+    problem_group: "",
+    problem_name: "",
     location: "",
     planned_status: "planned",
   });
-  const [problemGroups, setProblemGroups] = useState<ProblemGroup[]>([]);
-  const [problemReasons, setProblemReasons] = useState<ProblemReason[]>([]);
+  const [problemGroups, setProblemGroups] = useState<string[]>([]);
+  const [problemReasons, setProblemReasons] = useState<string[]>([]);
+
   const locations = [
     "QC রিলেটেড",
     "R&D ট্রায়াল রিলেটেড",
@@ -63,14 +69,32 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({ stations, shift, product
     "ডাই মেইনটেন্যান্স",
   ];
 
-  // Fetch problem groups
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   useEffect(() => {
     const fetchProblemGroups = async () => {
       try {
         const response = await fetch("http://localhost:5000/api/downtimeProblem");
         if (!response.ok) throw new Error("Failed to fetch problem groups");
         const data = await response.json();
-        setProblemGroups(Array.isArray(data) ? data : []);
+        const groups = data.map((item: any) => item.problem_groups).filter(Boolean);
+        setProblemGroups(groups);
       } catch (error) {
         console.error("Error fetching problem groups:", error);
       }
@@ -78,87 +102,107 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({ stations, shift, product
     fetchProblemGroups();
   }, []);
 
-  // Fetch problem reasons
   useEffect(() => {
     const fetchProblemReasons = async () => {
-      if (!formData.problemGroup) {
+      if (formData.problem_group) {
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/downtimeProblem/specific?problem=${formData.problem_group}`
+          );
+          if (!response.ok) throw new Error("Failed to fetch problem reasons");
+          const data = await response.json();
+          const reasons = data.map((item: any) => item.problem_reasons).filter(Boolean);
+          setProblemReasons(reasons);
+        } catch (error) {
+          console.error("Error fetching problem reasons:", error);
+        }
+      } else {
         setProblemReasons([]);
-        return;
-      }
-      try {
-        const response = await fetch(
-          `http://localhost:5000/api/downtimeProblem/specific?problem=${encodeURIComponent(formData.problemGroup)}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch problem reasons");
-        const data = await response.json();
-        setProblemReasons(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Error fetching problem reasons:", error);
       }
     };
     fetchProblemReasons();
-  }, [formData.problemGroup]);
+  }, [formData.problem_group]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "problem_group" ? { problem_name: "" } : {}),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
+      !formData.productId ||
       !formData.startTime ||
       !formData.endTime ||
-      !formData.problemGroup ||
-      !formData.problemReason ||
-      !formData.planned_status
+      !formData.problem_group ||
+      !formData.problem_name ||
+      !formData.location ||
+      !formData.planned_status ||
+      !user?.userId
     ) {
       Swal.fire({
         position: "center",
         icon: "warning",
-        title: "Please fill in all fields.",
+        title: "Please fill in all fields and ensure you are logged in.",
         showConfirmButton: false,
         timer: 2000,
       });
       return;
     }
 
+    const selectedProduct = products.find((p) => p.id === parseInt(formData.productId!));
+    if (!selectedProduct) {
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: "Invalid product selected.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      return;
+    }
+
+    const payload = {
+      productName: selectedProduct.productName,
+      productCode: selectedProduct.productCode,
+      productGroup: selectedProduct.productGroup,
+      station: stations,
+      productionDate: new Date().toISOString().slice(0, 10),
+      shift: shift?.shiftName || "",
+      cycleTime: selectedProduct.cycleTime,
+      unitsPerSensorSignal: selectedProduct.unitsPerSensorSignal,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      problem_group: formData.problem_group,
+      problemReason: formData.problem_name,
+      location: formData.location,
+      planned_status: formData.planned_status,
+      creator: user.userId,
+    };
+
+    console.log("Sending create request with payload:", payload);
     try {
-      if (!products.length) {
-        Swal.fire({
-          position: "center",
-          icon: "warning",
-          title: "No products available. Please select a product first.",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-        return;
-      }
-
-      const payload = {
-        ...formData,
-        station: stations,
-        shift: shift?.shiftName || "",
-        productName: products[0]?.productName || "",
-        productCode: products[0]?.productCode || "",
-        productGroup: products[0]?.productGroup || "",
-        productionDate: new Date().toISOString().split("T")[0],
-        cycleTime: products[0]?.cycleTime || "",
-        unitsPerSensorSignal: products[0]?.unitsPerSensorSignal || "",
-      };
-
       const response = await fetch("http://localhost:5000/api/downtimeProblem/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to save downtime data");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create downtime record");
+      }
 
       Swal.fire({
         position: "center",
         icon: "success",
-        title: "Downtime Saved Successfully!",
+        title: "Downtime Record Created Successfully!",
         showConfirmButton: false,
         timer: 2000,
       }).then(() => {
@@ -166,11 +210,11 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({ stations, shift, product
         onClose();
       });
     } catch (error) {
-      console.error("Error saving downtime data:", error);
+      console.error("Error creating downtime record:", error);
       Swal.fire({
         position: "center",
         icon: "error",
-        title: "Failed to save downtime data. Please try again!",
+        title: "Failed to create downtime record. Please try again!",
         showConfirmButton: false,
         timer: 2000,
       });
@@ -178,8 +222,24 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({ stations, shift, product
   };
 
   return (
-    <Modal title="Add Downtime" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+    <Modal title="Create Downtime Record" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-gray-300 mb-1">Product</label>
+          <select
+            name="productId"
+            value={formData.productId || ""}
+            onChange={handleInputChange}
+            className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Select a product</option>
+            {products.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.productName} ({product.productCode})
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="block text-gray-300 mb-1">Start Time</label>
           <input
@@ -200,56 +260,54 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({ stations, shift, product
             className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <label className="block text-gray-300 mb-1">Groups</label>
-            <select
-              name="problemGroup"
-              value={formData.problemGroup}
-              onChange={handleInputChange}
-              className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Select a group</option>
-              {problemGroups.map((group, index) => (
-                <option key={index} value={group.problem_groups}>
-                  {group.problem_groups}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-gray-300 mb-1">Reasons</label>
-            <select
-              name="problemReason"
-              value={formData.problemReason}
-              onChange={handleInputChange}
-              className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              disabled={!formData.problemGroup}
-            >
-              <option value="">Select a reason</option>
-              {problemReasons.map((reason, index) => (
-                <option key={index} value={reason.problem_reasons}>
-                  {reason.problem_reasons}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-gray-300 mb-1">Locations</label>
-            <select
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Select a location</option>
-              {locations.map((location, index) => (
-                <option key={index} value={location}>
-                  {location}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div>
+          <label className="block text-gray-300 mb-1">Problem Group</label>
+          <select
+            name="problem_group"
+            value={formData.problem_group}
+            onChange={handleInputChange}
+            className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Select a problem group</option>
+            {problemGroups.map((group, index) => (
+              <option key={index} value={group}>
+                {group}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-gray-300 mb-1">Problem Reason</label>
+          <select
+            name="problem_name"
+            value={formData.problem_name}
+            onChange={handleInputChange}
+            className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            disabled={!formData.problem_group}
+          >
+            <option value="">Select a problem reason</option>
+            {problemReasons.map((reason, index) => (
+              <option key={index} value={reason}>
+                {reason}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-gray-300 mb-1">Location</label>
+          <select
+            name="location"
+            value={formData.location}
+            onChange={handleInputChange}
+            className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Select a location</option>
+            {locations.map((location, index) => (
+              <option key={index} value={location}>
+                {location}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center gap-4">
           <label className="flex items-center text-gray-300">
@@ -275,7 +333,7 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({ stations, shift, product
             Unplanned
           </label>
         </div>
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}

@@ -115,6 +115,16 @@ const settings: SettingItem[] = [
   },
 ];
 
+// ✅ Define TypeScript Interface for User
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
+}
 export default function Shifts() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -132,6 +142,25 @@ export default function Shifts() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const selectAll = watch("selectAll");
   const selectedDays = watch("days", []);
+   const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   // Use Effect to populate form when editing
   useEffect(() => {
@@ -208,6 +237,7 @@ export default function Shifts() {
         days: data.days.join(", "),
         is_active: selectedShift ? selectedShift.is_active : true, // Preserve or default is_active
         selectAll: data.selectAll,
+        creator : user?.userId
       };
 
       console.log("Submitting payload:", payload);

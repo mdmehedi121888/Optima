@@ -1,5 +1,5 @@
-// ChangeoverModal.tsx
-import { FC, useState } from "react";
+// ProductChangeoverModal.tsx
+import { FC, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { Modal } from "./Modal";
 
@@ -28,14 +28,28 @@ interface ChangeoverFormData {
   endTime: string;
 }
 
-interface ChangeoverModalProps {
+interface ProductChangeoverModalProps {
   products: Product[];
   stations: string;
   shift: Shift | null;
   onClose: () => void;
 }
 
-export const ChangeoverModal: FC<ChangeoverModalProps> = ({ products, stations, shift, onClose }) => {
+// ✅ Define TypeScript Interface for User
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
+}
+
+export const ProductChangeoverModal: FC<ProductChangeoverModalProps> = ({ products, stations, shift, onClose }) => {
+  
+  
+  
   const [formData, setFormData] = useState<ChangeoverFormData>({
     productId: "",
     startTime: "",
@@ -47,6 +61,26 @@ export const ChangeoverModal: FC<ChangeoverModalProps> = ({ products, stations, 
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+   const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.productId || !formData.startTime || !formData.endTime) {
@@ -55,13 +89,18 @@ export const ChangeoverModal: FC<ChangeoverModalProps> = ({ products, stations, 
     }
 
     try {
-      const selectedProduct = products.find((product) => product.id === parseInt(formData.productId));
+      const selectedProduct:any = products.find((product) => product.id === parseInt(formData.productId));
+      
+      const cycleTime = selectedProduct?.cycleTime;
+      const unitsPerSensorSignal = selectedProduct?.unitsPerSensorSignal;
+
       if (!selectedProduct) {
         alert("Selected product not found.");
         return;
       }
 
       const today = new Date().toISOString().split("T")[0];
+
       const payload = {
         productName: selectedProduct.productName,
         productCode: selectedProduct.productCode,
@@ -73,7 +112,8 @@ export const ChangeoverModal: FC<ChangeoverModalProps> = ({ products, stations, 
         unitsPerSensorSignal: selectedProduct.unitsPerSensorSignal,
         startTime: formData.startTime,
         endTime: formData.endTime,
-        qty: 280,
+        qty: parseInt(cycleTime) * parseInt(unitsPerSensorSignal),
+        creator : user?.userId
       };
 
       const response = await fetch("http://localhost:5000/api/products/createProductRecords", {

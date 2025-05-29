@@ -157,7 +157,9 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
         setTargetQty(target);
 
         const oeeValue = target > 0 ? (productionQty / target) * 100 : 0;
-        // console.log("production qty and target: ",productionQty,target);
+
+        console.log("production qty and target: ",productionQty,target);
+        
         setOee(Number(oeeValue.toFixed(2)));
 
         setError(null);
