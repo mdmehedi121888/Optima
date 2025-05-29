@@ -1,15 +1,9 @@
-// ProductChangeoverModal.tsx
 import { FC, useEffect, useState } from "react";
-import Swal from "sweetalert2";
 import { Modal } from "./Modal";
+import Swal from "sweetalert2";
 
-// Define Shift interface directly
 interface Shift {
   shiftName: string;
-  // Add other properties if needed, e.g.:
-  // id?: number;
-  // startTime?: string;
-  // endTime?: string;
 }
 
 interface Product {
@@ -17,25 +11,18 @@ interface Product {
   productName: string;
   productCode: string;
   productGroup: string;
-  stations: string;
   cycleTime: string;
   unitsPerSensorSignal: string;
 }
 
-interface ChangeoverFormData {
+interface ProductRecord {
   productId: string;
   startTime: string;
   endTime: string;
-}
-
-interface ProductChangeoverModalProps {
-  products: Product[];
   stations: string;
-  shift: Shift | null;
-  onClose: () => void;
+  shift: string;
 }
 
-// ✅ Define TypeScript Interface for User
 interface UserType {
   id: number;
   userName: string;
@@ -46,22 +33,29 @@ interface UserType {
   stations: string;
 }
 
-export const ProductChangeoverModal: FC<ProductChangeoverModalProps> = ({ products, stations, shift, onClose }) => {
-  
-  
-  
-  const [formData, setFormData] = useState<ChangeoverFormData>({
+interface ProductModalProps {
+  stations: string;
+  shift: Shift | null;
+  products: Product[];
+  onClose: () => void;
+  onSubmitSuccess: () => void;
+}
+
+export const ProductModal: FC<ProductModalProps> = ({
+  stations,
+  shift,
+  products,
+  onClose,
+  onSubmitSuccess,
+}) => {
+  const [user, setUser] = useState<UserType | null>(null);
+  const [formData, setFormData] = useState<ProductRecord>({
     productId: "",
     startTime: "",
     endTime: "",
+    stations: stations,
+    shift: shift?.shiftName || "",
   });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-   const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -81,62 +75,79 @@ export const ProductChangeoverModal: FC<ProductChangeoverModalProps> = ({ produc
     fetchUser();
   }, []);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.productId || !formData.startTime || !formData.endTime) {
-      alert("Please fill in all fields.");
+    if (!formData.productId || !formData.startTime || !formData.endTime || !user?.userId) {
+      Swal.fire({
+        position: "center",
+        icon: "warning",
+        title: "Please fill in all fields and ensure you are logged in.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
       return;
     }
 
+    const selectedProduct = products.find((p) => p.id === parseInt(formData.productId));
+    if (!selectedProduct) {
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: "Invalid product selected.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      return;
+    }
+
+    const payload = {
+      productName: selectedProduct.productName,
+      productCode: selectedProduct.productCode,
+      productGroup: selectedProduct.productGroup,
+      station: stations,
+      shift: shift?.shiftName || "",
+      productionDate: new Date().toISOString().slice(0, 10),
+      cycleTime: selectedProduct.cycleTime,
+      unitsPerSensorSignal: selectedProduct.unitsPerSensorSignal,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      qty: parseInt(selectedProduct.cycleTime) * parseInt(selectedProduct.unitsPerSensorSignal),
+      creator: user.userId,
+    };
+
     try {
-      const selectedProduct:any = products.find((product) => product.id === parseInt(formData.productId));
-      
-      const cycleTime = selectedProduct?.cycleTime;
-      const unitsPerSensorSignal = selectedProduct?.unitsPerSensorSignal;
-
-      if (!selectedProduct) {
-        alert("Selected product not found.");
-        return;
-      }
-
-      const today = new Date().toISOString().split("T")[0];
-
-      const payload = {
-        productName: selectedProduct.productName,
-        productCode: selectedProduct.productCode,
-        productGroup: selectedProduct.productGroup,
-        station: stations,
-        shift: shift?.shiftName,
-        productionDate: today,
-        cycleTime: selectedProduct.cycleTime,
-        unitsPerSensorSignal: selectedProduct.unitsPerSensorSignal,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        qty: parseInt(cycleTime) * parseInt(unitsPerSensorSignal),
-        creator : user?.userId
-      };
-
       const response = await fetch("http://localhost:5000/api/products/createProductRecords", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to save product changeover data");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create product record");
+      }
 
       Swal.fire({
         position: "center",
         icon: "success",
-        title: "Product Saved Successfully!",
+        title: "Product Record Created Successfully!",
         showConfirmButton: false,
         timer: 2000,
-      }).then(() => onClose());
+      }).then(() => {
+        onSubmitSuccess();
+        onClose();
+      });
     } catch (error) {
-      console.error("Error saving product changeover data:", error);
+      console.error("Error creating product record:", error);
       Swal.fire({
         position: "center",
         icon: "error",
-        title: "Failed to save product changeover data. Please try again!",
+        title: "Failed to create product record. Please try again!",
         showConfirmButton: false,
         timer: 2000,
       });
@@ -144,8 +155,8 @@ export const ProductChangeoverModal: FC<ProductChangeoverModalProps> = ({ produc
   };
 
   return (
-    <Modal title="Product Changeover" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+    <Modal title="Create Product Record" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-gray-300 mb-1">Product</label>
           <select
@@ -157,7 +168,7 @@ export const ProductChangeoverModal: FC<ProductChangeoverModalProps> = ({ produc
             <option value="">Select a product</option>
             {products.map((product) => (
               <option key={product.id} value={product.id}>
-                {product.productName}
+                {product.productName} ({product.productCode})
               </option>
             ))}
           </select>
@@ -182,7 +193,7 @@ export const ProductChangeoverModal: FC<ProductChangeoverModalProps> = ({ produc
             className="w-full bg-gray-800 text-gray-300 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}

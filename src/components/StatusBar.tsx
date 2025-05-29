@@ -5,8 +5,9 @@ import { StatusItem } from "./StatusItem";
 import { OperatorModal } from "./OperatorModal";
 import { DowntimeModal } from "./DowntimeModal";
 import { DowntimeRecordsModal } from "./DowntimeRecordsModal";
+import { ProductModal } from "./ProductModal";
+import { ProductRecordsModal } from "./ProductRecordsModal";
 import { Clock, Users, RefreshCw, Zap, Trash, Mail } from "lucide-react";
-import { ProductChangeoverModal } from "./ProductChangeoverModal";
 
 interface Shift {
   shiftName: string;
@@ -26,7 +27,7 @@ interface Product {
   productGroup: string;
   cycleTime: string;
   unitsPerSensorSignal: string;
-  stations: string; // Added to match ProductChangeoverModal requirement
+  stations: string;
 }
 
 interface StatusCounts {
@@ -38,12 +39,6 @@ interface StatusCounts {
   mail: number;
 }
 
-interface ChangeoverFormData {
-  productId: string;
-  startTime: string;
-  endTime: string;
-}
-
 interface DowntimeFormData {
   id?: number;
   startTime: string;
@@ -52,6 +47,16 @@ interface DowntimeFormData {
   problem_name: string;
   location: string;
   planned_status: "planned" | "unplanned";
+}
+
+interface ProductRecord {
+  id?: number;
+  productId: string;
+    productName: string;
+  startTime: string;
+  endTime: string;
+  stations: string;
+  shift: string;
 }
 
 export function StatusBar({ stations, shift }: { stations: string; shift: Shift | null }) {
@@ -65,9 +70,11 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
   });
   const [operators, setOperators] = useState<Operator[]>([]);
   const [downtimeRecords, setDowntimeRecords] = useState<DowntimeFormData[]>([]);
+  const [productRecords, setProductRecords] = useState<ProductRecord[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [showOperatorModal, setShowOperatorModal] = useState(false);
-  const [showProductChangeoverModal, setShowProductChangeoverModal] = useState(false);
+  const [showProductRecordsModal, setShowProductRecordsModal] = useState(false);
+  const [showProductFormModal, setShowProductFormModal] = useState(false);
   const [showDowntimeRecordsModal, setShowDowntimeRecordsModal] = useState(false);
   const [showDowntimeFormModal, setShowDowntimeFormModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +114,6 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
         setError("Failed to fetch operators data.");
       }
     };
-
     fetchOperatorData();
   }, [stations, shift]);
 
@@ -149,6 +155,43 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
   }, [stations, shift]);
 
   useEffect(() => {
+    const fetchProductRecordsData = async () => {
+      try {
+        if (!stations || !shift?.shiftName) return;
+        const response = await fetch(
+          `http://localhost:5000/api/products/specificProductRecords?station=${stations}&shift=${shift.shiftName}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch product records");
+        const data = await response.json();
+
+        const records = Array.isArray(data)
+          ? data.map((item: any) => ({
+              id: item.id || 0,
+              productId: item.productId || "",
+                productName: item.productName || "",
+              startTime: item.startTime || "",
+              endTime: item.endTime || "",
+              stations: item.stations || stations,
+              shift: item.shift || shift.shiftName,
+            }))
+          : [];
+
+        setProductRecords(records);
+        setStatusCounts((prev) => ({
+          ...prev,
+          productChangeover: records.length,
+        }));
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching product records data:", error);
+        setError("Failed to fetch product records.");
+      }
+    };
+
+    fetchProductRecordsData();
+  }, [stations, shift]);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         if (!stations) return;
@@ -164,7 +207,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
               productGroup: item.productGroup || "",
               cycleTime: item.cycleTime || "",
               unitsPerSensorSignal: item.unitsPerSensorSignal || "",
-              stations: item.stations || stations, // Map stations, fallback to prop
+              stations: item.stations || stations,
             }))
           : [];
 
@@ -212,6 +255,40 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     }
   };
 
+  const refreshProductRecords = async () => {
+    try {
+      if (!stations || !shift?.shiftName) return;
+      const response = await fetch(
+        `http://localhost:5000/api/products/specificProductRecords?station=${stations}&shift=${shift.shiftName}`
+      );
+      if (!response.ok) throw new Error("Failed to refresh product records");
+      const data = await response.json();
+
+      const records = Array.isArray(data)
+        ? data.map((item: any) => ({
+            id: item.id || 0,
+            productId: item.productId || "",
+            productName: item.productName || "",
+            startTime: item.startTime || "",
+            endTime: item.endTime || "",
+            stations: item.stations || stations,
+            shift: item.shift || shift.shiftName,
+          }))
+        : [];
+
+      setProductRecords(records);
+      console.log("records: ",records);
+      setStatusCounts((prev) => ({
+        ...prev,
+        productChangeover: records.length,
+      }));
+      setError(null);
+    } catch (error) {
+      console.error("Error refreshing product records:", error);
+      setError("Failed to refresh product records.");
+    }
+  };
+
   return (
     <>
       {error && (
@@ -234,7 +311,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           icon={RefreshCw}
           label="Product Changeover"
           count={statusCounts.productChangeover}
-          onClick={() => setShowProductChangeoverModal(true)}
+          onClick={() => setShowProductRecordsModal(true)}
         />
         <StatusItem
           icon={Clock}
@@ -263,12 +340,28 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
         <OperatorModal operators={operators} onClose={() => setShowOperatorModal(false)} />
       )}
       
-      {showProductChangeoverModal && (
-        <ProductChangeoverModal
+      {showProductRecordsModal && (
+        <ProductRecordsModal
           products={products}
           stations={stations}
           shift={shift}
-          onClose={() => setShowProductChangeoverModal(false)}
+          productRecords={productRecords}
+          onClose={() => setShowProductRecordsModal(false)}
+          onSubmitSuccess={refreshProductRecords}
+          onAdd={() => {
+            setShowProductRecordsModal(false);
+            setShowProductFormModal(true);
+          }}
+        />
+      )}
+
+      {showProductFormModal && (
+        <ProductModal
+          stations={stations}
+          shift={shift}
+          products={products}
+          onClose={() => setShowProductFormModal(false)}
+          onSubmitSuccess={refreshProductRecords}
         />
       )}
 
