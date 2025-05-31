@@ -1,31 +1,23 @@
-import { useNavigate } from "react-router-dom";
 import {
   User,
-  Factory,
   AlertTriangle,
   Gauge,
   Trash2,
   MapPin,
   Package,
-  AlignJustify,
   LaptopMinimal,
   UsersRound,
   Calendar,
   Plus,
   X,
-  AlignLeft,
-  EyeOff,
-  Eye,
+  Search,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import Sidebar from "./Sidebar";
-import SubSidebar from "./SubSidebar";
-import HandleSidebar from "./HandleSidebar";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
 
 interface StationFormData {
-  id: number;
+  id?: number;
   stations: string[];
   stationsGroup: string;
   emptyShiftReason: string;
@@ -49,6 +41,16 @@ interface SettingItem {
   title: string;
   description: string;
   link: string;
+}
+
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
 }
 
 const settings: SettingItem[] = [
@@ -114,24 +116,16 @@ const settings: SettingItem[] = [
   },
 ];
 
-// ✅ Define TypeScript Interface for User
-interface UserType {
-  id: number;
-  userName: string;
-  userImage: string;
-  role: string;
-  userId: string;
-  defaultStation: string;
-  stations: string;
-}
-
 export default function Stations() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const { register, watch, handleSubmit, setValue, reset } = useForm<StationFormData>();
   const [stations, setStations] = useState<Station[]>([]);
-   const [user, setUser] = useState<UserType | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -151,7 +145,6 @@ export default function Stations() {
     fetchUser();
   }, []);
 
-  // Use Effect to populate form when editing
   useEffect(() => {
     if (isEditModalOpen && selectedStation) {
       setValue("stations", selectedStation.stations?.split(", ") || []);
@@ -161,7 +154,7 @@ export default function Stations() {
       setValue("unhappyOee", selectedStation.unhappyOee);
       setValue("happyOee", selectedStation.happyOee);
     } else {
-      reset(); // Clear form when adding a new Station
+      reset();
     }
   }, [isEditModalOpen, selectedStation, setValue, reset]);
 
@@ -181,16 +174,28 @@ export default function Stations() {
     }
   };
 
-  // Call fetchStations inside useEffect on component mount
   useEffect(() => {
     fetchStations();
   }, []);
 
+  const filteredStations = stations.filter(
+    (station) =>
+      station.stations?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      station.stationsGroup?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paginatedStations = filteredStations.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredStations.length / itemsPerPage);
+
   const selectedStations = watch("stations", []);
 
   const openAddStationModal = () => {
-    setSelectedStation(null); // Clear selectedStation
-    reset(); // Reset form fields
+    setSelectedStation(null);
+    reset();
     setIsModalOpen(true);
   };
 
@@ -240,7 +245,7 @@ export default function Stations() {
       }).then(() => {
         setIsModalOpen(false);
         setIsEditModalOpen(false);
-        setSelectedStation(null); // Clear selectedStation after submission
+        setSelectedStation(null);
         fetchStations();
         reset();
       });
@@ -290,7 +295,7 @@ export default function Stations() {
         });
 
         setIsEditModalOpen(false);
-        setSelectedStation(null); // Clear selectedStation after deletion
+        setSelectedStation(null);
         fetchStations();
       } catch (error) {
         console.error("Error deleting station:", error);
@@ -316,6 +321,21 @@ export default function Stations() {
             <Plus className="w-5 h-5 mr-2 font-bold" /> <span className="font-bold">Station</span>
           </button>
         </div>
+        <div className="mb-4 max-w-[90rem] mx-auto">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by station name or group..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full border border-gray-300 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 pl-10"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          </div>
+        </div>
         <div className="bg-white p-6 rounded-xl shadow-lg max-w-7xl mx-auto overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse rounded-lg overflow-hidden">
@@ -330,7 +350,7 @@ export default function Stations() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-700">
-                {stations.map((station, index) => (
+                {paginatedStations.map((station, index) => (
                   <tr
                     key={station.id}
                     className={`cursor-pointer hover:bg-green-100 transition duration-200 ${
@@ -339,11 +359,9 @@ export default function Stations() {
                     onClick={() => openEditStationModal(station)}
                   >
                     <td className="p-3 text-center">{station.stations}</td>
-                    <td className="p-3 font-semibold text-center">{station.stationsGroup ? station.stationsGroup : "-"}</td>
-                    <td className="p-3 font-semibold text-center">
-                      {station.emptyShiftReason ? station.emptyShiftReason : "-"}
-                    </td>
-                    <td className="p-3 font-semibold text-center">{station.requireOperator ? station.requireOperator : "-"}</td>
+                    <td className="p-3 font-semibold text-center">{station.stationsGroup || "-"}</td>
+                    <td className="p-3 font-semibold text-center">{station.emptyShiftReason || "-"}</td>
+                    <td className="p-3 font-semibold text-center">{station.requireOperator || "-"}</td>
                     <td className="p-3 font-semibold text-center">{station.unhappyOee}%</td>
                     <td className="p-3 font-semibold text-center">{station.happyOee}%</td>
                   </tr>
@@ -351,6 +369,27 @@ export default function Stations() {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {(isModalOpen || isEditModalOpen) && (
@@ -362,8 +401,8 @@ export default function Stations() {
                   onClick={() => {
                     setIsModalOpen(false);
                     setIsEditModalOpen(false);
-                    setSelectedStation(null); // Clear selectedStation when closing modal
-                    reset(); // Reset form when closing modal
+                    setSelectedStation(null);
+                    reset();
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -417,8 +456,8 @@ export default function Stations() {
                     onClick={() => {
                       setIsModalOpen(false);
                       setIsEditModalOpen(false);
-                      setSelectedStation(null); // Clear selectedStation when canceling
-                      reset(); // Reset form when canceling
+                      setSelectedStation(null);
+                      reset();
                     }}
                     className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
                   >

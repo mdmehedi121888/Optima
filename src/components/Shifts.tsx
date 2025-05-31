@@ -1,31 +1,23 @@
-import { useNavigate } from "react-router-dom";
 import {
   User,
-  Factory,
   AlertTriangle,
   Gauge,
   Trash2,
   MapPin,
   Package,
-  AlignJustify,
   LaptopMinimal,
   UsersRound,
   Calendar,
   Plus,
   X,
-  AlignLeft,
-  EyeOff,
-  Eye,
+  Search,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import Sidebar from "./Sidebar";
-import SubSidebar from "./SubSidebar";
-import HandleSidebar from "./HandleSidebar";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
 
 interface ShiftFormData {
-  id: number;
+  id?: number;
   shiftName: string;
   startTime: string;
   endTime: string;
@@ -50,6 +42,16 @@ interface SettingItem {
   title: string;
   description: string;
   link: string;
+}
+
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
 }
 
 const settings: SettingItem[] = [
@@ -115,16 +117,6 @@ const settings: SettingItem[] = [
   },
 ];
 
-// ✅ Define TypeScript Interface for User
-interface UserType {
-  id: number;
-  userName: string;
-  userImage: string;
-  role: string;
-  userId: string;
-  defaultStation: string;
-  stations: string;
-}
 export default function Shifts() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -140,9 +132,13 @@ export default function Shifts() {
     },
   });
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const itemsPerPage = 10;
+
   const selectAll = watch("selectAll");
   const selectedDays = watch("days", []);
-   const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -162,7 +158,6 @@ export default function Shifts() {
     fetchUser();
   }, []);
 
-  // Use Effect to populate form when editing
   useEffect(() => {
     if (isEditModalOpen && selectedShift) {
       setValue("shiftName", selectedShift.shiftName);
@@ -212,11 +207,24 @@ export default function Shifts() {
     fetchShifts();
   }, []);
 
+  const filteredShifts = shifts.filter(
+    (shift) =>
+      shift.shiftName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shift.stations?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paginatedShifts = filteredShifts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredShifts.length / itemsPerPage);
+
   const selectedStations = watch("stations", []);
 
   const openAddShiftModal = () => {
-    setSelectedShift(null); // Clear selectedShift
-    reset(); // Reset form fields
+    setSelectedShift(null);
+    reset();
     setIsModalOpen(true);
   };
 
@@ -235,12 +243,10 @@ export default function Shifts() {
         ...data,
         stations: data.stations.join(", "),
         days: data.days.join(", "),
-        is_active: selectedShift ? selectedShift.is_active : true, // Preserve or default is_active
+        is_active: selectedShift ? selectedShift.is_active : true,
         selectAll: data.selectAll,
-        creator : user?.userId
+        creator: user?.userId
       };
-
-      console.log("Submitting payload:", payload);
 
       const url = selectedShift
         ? `http://localhost:5000/api/shifts/${selectedShift.id}`
@@ -278,11 +284,11 @@ export default function Shifts() {
       }).then(() => {
         setIsModalOpen(false);
         setIsEditModalOpen(false);
-        setSelectedShift(null); // Clear selectedShift after submission
+        setSelectedShift(null);
         fetchShifts();
         reset();
       });
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error in onSubmit:", error);
       Swal.fire({
         position: "center",
@@ -338,9 +344,9 @@ export default function Shifts() {
         });
 
         setIsEditModalOpen(false);
-        setSelectedShift(null); // Clear selectedShift after deletion
+        setSelectedShift(null);
         fetchShifts();
-      } catch (error:any) {
+      } catch (error: any) {
         console.error("Error deleting shift:", error);
         Swal.fire({
           title: "Error!",
@@ -364,6 +370,21 @@ export default function Shifts() {
             <Plus className="w-5 h-5 mr-2 font-bold" /> <span className="font-bold">SHIFT</span>
           </button>
         </div>
+        <div className="mb-4 max-w-[90rem] mx-auto">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by shift name or stations..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full border border-gray-300 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 pl-10"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          </div>
+        </div>
         <div className="bg-white p-6 rounded-xl shadow-lg max-w-7xl mx-auto overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse rounded-lg overflow-hidden">
@@ -377,7 +398,7 @@ export default function Shifts() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-700">
-                {shifts.map((shift, index) => (
+                {paginatedShifts.map((shift, index) => (
                   <tr
                     key={shift.id}
                     className={`cursor-pointer hover:bg-green-100 transition duration-200 ${
@@ -406,6 +427,27 @@ export default function Shifts() {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {(isModalOpen || isEditModalOpen) && (
@@ -417,8 +459,8 @@ export default function Shifts() {
                   onClick={() => {
                     setIsModalOpen(false);
                     setIsEditModalOpen(false);
-                    setSelectedShift(null); // Clear selectedShift  <ShiftFormData>
-                    reset(); // Reset form when closing modal
+                    setSelectedShift(null);
+                    reset();
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -509,8 +551,8 @@ export default function Shifts() {
                     onClick={() => {
                       setIsModalOpen(false);
                       setIsEditModalOpen(false);
-                      setSelectedShift(null); // Clear selectedShift when canceling
-                      reset(); // Reset form when canceling
+                      setSelectedShift(null);
+                      reset();
                     }}
                     className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
                   >

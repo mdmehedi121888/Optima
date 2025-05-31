@@ -7,7 +7,7 @@ import Settings from "./Settings";
 import Users from "./components/Users";
 import Profile from "./components/Profile";
 import Operators from "./components/Operators";
-import StopReason from "./components/StopReason";
+import StopReason from "./components/StopReasons";
 import SpeedLossReasons from "./components/SpeedLossReasons";
 import ScrapReasons from "./components/ScrapReasons";
 import Locations from "./components/Locations";

@@ -9,9 +9,11 @@ import {
   LaptopMinimal,
   UsersRound,
   Calendar,
-  Plus, X,
+  Plus,
+  X,
   EyeOff,
-  Eye
+  Eye,
+  Search,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -34,7 +36,6 @@ interface User {
     defaultStation: string;
     stations: string;
     creator: string;
-
 }
 
 interface SettingItem {
@@ -42,6 +43,16 @@ interface SettingItem {
     title: string;
     description: string;
     link: string;
+}
+
+interface UserType {
+  id: number;
+  userName: string;
+  userImage: string;
+  role: string;
+  userId: string;
+  defaultStation: string;
+  stations: string;
 }
 
 const settings: SettingItem[] = [
@@ -107,17 +118,6 @@ const settings: SettingItem[] = [
     },
 ];
 
-// ✅ Define TypeScript Interface for User
-interface UserType {
-  id: number;
-  userName: string;
-  userImage: string;
-  role: string;
-  userId: string;
-  defaultStation: string;
-  stations: string;
-}
-
 export default function Users() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -125,7 +125,10 @@ export default function Users() {
   const { register, watch, handleSubmit, setValue, reset } = useForm<UserFormData>();
   const [users, setUsers] = useState<User[]>([]);
   const [showPassword, setShowPassword] = useState(false);
-   const [user, setUser] = useState<UserType | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -145,8 +148,6 @@ export default function Users() {
     fetchUser();
   }, []);
 
-
-  // Use Effect to populate form when editing
   useEffect(() => {
     if (isEditModalOpen && selectedUser) {
       setValue("userId", selectedUser.userId);
@@ -154,7 +155,7 @@ export default function Users() {
       setValue("role", selectedUser.role);
       setValue("stations", selectedUser.stations?.split(", ") || []);
     } else {
-      reset(); // Clear form when adding a new user
+      reset();
     }
   }, [isEditModalOpen, selectedUser, setValue, reset]);
 
@@ -174,16 +175,26 @@ export default function Users() {
     }
   };
 
-  // Call fetchUsers inside useEffect on component mount
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const selectedStations = watch("stations", []);
+  const filteredUsers = users.filter(
+    (user) =>
+      user.userId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.userName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
   const openAddUserModal = () => {
-    setSelectedUser(null); // Clear selectedUser
-    reset(); // Reset form fields
+    setSelectedUser(null);
+    reset();
     setIsModalOpen(true);
   };
 
@@ -249,7 +260,7 @@ export default function Users() {
       }).then(() => {
         setIsModalOpen(false);
         setIsEditModalOpen(false);
-        setSelectedUser(null); // Clear selectedUser after submission
+        setSelectedUser(null);
         fetchUsers();
       });
 
@@ -299,7 +310,7 @@ export default function Users() {
         });
 
         setIsEditModalOpen(false);
-        setSelectedUser(null); // Clear selectedUser after deletion
+        setSelectedUser(null);
         fetchUsers();
       } catch (error) {
         console.error("Error deleting user:", error);
@@ -322,6 +333,21 @@ export default function Users() {
             <Plus className="w-5 h-5 mr-2 font-bold" /> <span className="font-bold">USER</span>
           </button>
         </div>
+        <div className="mb-4 max-w-[90rem] mx-auto">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by ID or name..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full border border-gray-300 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 pl-10"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          </div>
+        </div>
         <div className="bg-white p-6 rounded-xl shadow-lg max-w-7xl mx-auto overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse rounded-lg overflow-hidden">
@@ -335,7 +361,7 @@ export default function Users() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-700">
-                {users.map((user, index) => (
+                {paginatedUsers.map((user, index) => (
                   <tr
                     key={user.id}
                     className={`cursor-pointer hover:bg-green-100 transition duration-200 ${
@@ -359,6 +385,27 @@ export default function Users() {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {(isModalOpen || isEditModalOpen) && (
@@ -370,8 +417,8 @@ export default function Users() {
                   onClick={() => {
                     setIsModalOpen(false);
                     setIsEditModalOpen(false);
-                    setSelectedUser(null); // Clear selectedUser when closing modal
-                    reset(); // Reset form when closing modal
+                    setSelectedUser(null);
+                    reset();
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -399,7 +446,6 @@ export default function Users() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-
                 <select
                   {...register("role")}
                   className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -423,15 +469,14 @@ export default function Users() {
                     </label>
                   ))}
                 </div>
-
                 <div className="mt-5 flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       setIsModalOpen(false);
                       setIsEditModalOpen(false);
-                      setSelectedUser(null); // Clear selectedUser when canceling
-                      reset(); // Reset form when canceling
+                      setSelectedUser(null);
+                      reset();
                     }}
                     className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
                   >
