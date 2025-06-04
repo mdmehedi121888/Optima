@@ -7,6 +7,8 @@ import { DowntimeModal } from "./DowntimeModal";
 import { DowntimeRecordsModal } from "./DowntimeRecordsModal";
 import { ProductModal } from "./ProductModal";
 import { ProductRecordsModal } from "./ProductRecordsModal";
+import { ScrapModal } from "./ScrapModal";
+import { ScrapRecordsModal } from "./ScrapRecordsModal";
 import { Clock, Users, RefreshCw, Zap, Trash, Mail } from "lucide-react";
 
 interface Shift {
@@ -52,11 +54,27 @@ interface DowntimeFormData {
 interface ProductRecord {
   id?: number;
   productId: string;
-    productName: string;
+  productName: string;
   startTime: string;
   endTime: string;
   stations: string;
   shift: string;
+}
+
+interface ScrapFormData {
+  id?: number;
+  start_time: string;
+  end_time: string;
+  scrap_qty: number;
+  scrap_reason: string;
+  production_date: string;
+  shift: string;
+  station: string;
+  location: string;
+  creator: string;
+  is_active?: number;
+  sys_date_time?: string;
+  updated_at?: string | null;
 }
 
 export function StatusBar({ stations, shift }: { stations: string; shift: Shift | null }) {
@@ -71,12 +89,15 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
   const [operators, setOperators] = useState<Operator[]>([]);
   const [downtimeRecords, setDowntimeRecords] = useState<DowntimeFormData[]>([]);
   const [productRecords, setProductRecords] = useState<ProductRecord[]>([]);
+  const [scrapRecords, setScrapRecords] = useState<ScrapFormData[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [showOperatorModal, setShowOperatorModal] = useState(false);
   const [showProductRecordsModal, setShowProductRecordsModal] = useState(false);
   const [showProductFormModal, setShowProductFormModal] = useState(false);
   const [showDowntimeRecordsModal, setShowDowntimeRecordsModal] = useState(false);
   const [showDowntimeFormModal, setShowDowntimeFormModal] = useState(false);
+  const [showScrapRecordsModal, setShowScrapRecordsModal] = useState(false);
+  const [showScrapFormModal, setShowScrapFormModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -168,7 +189,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           ? data.map((item: any) => ({
               id: item.id || 0,
               productId: item.productId || "",
-                productName: item.productName || "",
+              productName: item.productName || "",
               startTime: item.startTime || "",
               endTime: item.endTime || "",
               stations: item.stations || stations,
@@ -192,10 +213,53 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
   }, [stations, shift]);
 
   useEffect(() => {
+    const fetchScrapRecordsData = async () => {
+      try {
+        if (!stations || !shift?.shiftName) return;
+        const response = await fetch(
+          `http://localhost:5000/api/scrapReasons/scrap?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch scrap records");
+        const data = await response.json();
+
+        const records = Array.isArray(data)
+          ? data.map((item: any) => ({
+              id: item.id || 0,
+              start_time: item.start_time || "",
+              end_time: item.end_time || "",
+              scrap_qty: item.scrap_qty || 0,
+              scrap_reason: item.scrap_reason || "",
+              production_date: item.production_date || "",
+              shift: item.shift || "",
+              station: item.station || "",
+              location: item.location || "",
+              creator: item.creator || "",
+              is_active: item.is_active,
+              sys_date_time: item.sys_date_time,
+              updated_at: item.updated_at,
+            }))
+          : [];
+
+        setScrapRecords(records);
+        setStatusCounts((prev) => ({
+          ...prev,
+          scrap: records.length,
+        }));
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching scrap records data:", error);
+        setError("Failed to fetch scrap records.");
+      }
+    };
+
+    fetchScrapRecordsData();
+  }, [stations, shift]);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         if (!stations) return;
-        const response = await fetch(`http://localhost:5000/api/products/specific?stations=${stations}`);
+        const response = await fetch(`http://localhost:5000/api/products/specific?stations=${encodeURIComponent(stations)}`);
         if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
 
@@ -226,7 +290,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     try {
       if (!stations || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/downtimeProblem/specificDowntimeRecords?station=${stations}&shift=${shift.shiftName}`
+        `http://localhost:5000/api/downtimeProblem/specificDowntimeRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
       );
       if (!response.ok) throw new Error("Failed to refresh downtime records");
       const data = await response.json();
@@ -259,7 +323,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     try {
       if (!stations || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/products/specificProductRecords?station=${stations}&shift=${shift.shiftName}`
+        `http://localhost:5000/api/products/specificProductRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
       );
       if (!response.ok) throw new Error("Failed to refresh product records");
       const data = await response.json();
@@ -277,7 +341,6 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
         : [];
 
       setProductRecords(records);
-      console.log("records: ",records);
       setStatusCounts((prev) => ({
         ...prev,
         productChangeover: records.length,
@@ -286,6 +349,45 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     } catch (error) {
       console.error("Error refreshing product records:", error);
       setError("Failed to refresh product records.");
+    }
+  };
+
+  const refreshScrapRecords = async () => {
+    try {
+      if (!stations || !shift?.shiftName) return;
+      const response = await fetch(
+        `http://localhost:5000/api/scrapReasons/scrap?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+      );
+      if (!response.ok) throw new Error("Failed to refresh scrap records");
+      const data = await response.json();
+
+      const records = Array.isArray(data)
+        ? data.map((item: any) => ({
+            id: item.id || 0,
+            start_time: item.start_time || "",
+            end_time: item.end_time || "",
+            scrap_qty: item.scrap_qty || 0,
+            scrap_reason: item.scrap_reason || "",
+            production_date: item.production_date || "",
+            shift: item.shift || "",
+            station: item.station || "",
+            location: item.location || "",
+            creator: item.creator || "",
+            is_active: item.is_active,
+            sys_date_time: item.sys_date_time,
+            updated_at: item.updated_at,
+          }))
+        : [];
+
+      setScrapRecords(records);
+      setStatusCounts((prev) => ({
+        ...prev,
+        scrap: records.length,
+      }));
+      setError(null);
+    } catch (error) {
+      console.error("Error refreshing scrap records:", error);
+      setError("Failed to refresh scrap records.");
     }
   };
 
@@ -328,6 +430,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           icon={Trash}
           label="Scrap"
           count={statusCounts.scrap}
+          onClick={() => setShowScrapRecordsModal(true)}
         />
         <StatusItem
           icon={Mail}
@@ -387,6 +490,27 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           products={products}
           onClose={() => setShowDowntimeFormModal(false)}
           onSubmitSuccess={refreshDowntimeRecords}
+        />
+      )}
+
+      {showScrapRecordsModal && (
+        <ScrapRecordsModal
+          scrapRecords={scrapRecords}
+          onAdd={() => {
+            setShowScrapRecordsModal(false);
+            setShowScrapFormModal(true);
+          }}
+          onClose={() => setShowScrapRecordsModal(false)}
+          onUpdateSuccess={refreshScrapRecords}
+        />
+      )}
+
+      {showScrapFormModal && (
+        <ScrapModal
+          stations={stations}
+          shift={shift}
+          onClose={() => setShowScrapFormModal(false)}
+          onSubmitSuccess={refreshScrapRecords}
         />
       )}
     </>
