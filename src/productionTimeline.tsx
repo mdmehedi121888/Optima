@@ -96,7 +96,6 @@ export function ProductionTimeline({ station, shift, onProductionUpdate, onHourl
         },
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -459,8 +458,8 @@ export function ProductionTimeline({ station, shift, onProductionUpdate, onHourl
       <div className="space-y-1">
         {timeSlots.map((slot) => {
           const cycleTime = productRecords.length > 0
-            ? Number(productRecords[0].cycleTime) * Number(productRecords[0].unitsPerSensorSignal) || 500
-            : 500;
+            ? Number(productRecords[0].cycleTime)
+            : 0;
 
           return (
             <div
