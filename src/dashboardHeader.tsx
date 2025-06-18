@@ -1,7 +1,12 @@
 "use client";
-"use client";
 
-import { AlignJustify, ChevronLeft, ChevronRight, Settings, SkipForward } from "lucide-react";
+import {
+  AlignJustify,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+  SkipForward,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import { Shift } from "./page";
@@ -10,34 +15,79 @@ interface DashboardHeaderProps {
   onSelectionChange: (station: string, shift: Shift | null) => void;
 }
 
+interface Station {
+  id: number;
+  stations: string;
+  stationsGroup: string;
+  requireOperator: string;
+  emptyShiftReason: string;
+  unhappyOee: number;
+  happyOee: number;
+  is_active: number;
+  creator: string | null;
+  sys_date_time: string;
+  updated_at: string | null;
+}
+
 export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [stations, setStations] = useState<Station[]>([]);
+  const [stationIndex, setStationIndex] = useState<number>(0);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [stationIndex, setStationIndex] = useState<number>(0);
 
-  const stations = ["Internal Line", "External Line", "Final Line", "Valve Plate"];
   const currentDay = currentTime.toLocaleDateString("en-US", { weekday: "long" });
+  const todayDate = currentTime.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "2-digit",
+  }).split("/").reverse().join(".");
 
+  const currentStation = stations[stationIndex]?.stations || "";
+
+  // Fetch stations once
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/stations");
+        const data = await response.json();
+        if (response.ok) {
+          setStations(data);
+        } else {
+          console.error("Error fetching stations:", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching stations:", error);
+      }
+    };
+
+    fetchStations();
+  }, []);
+
+  // Fetch shifts when station or day changes
   useEffect(() => {
     const fetchShifts = async () => {
+      if (!currentStation) return;
+
       try {
         const response = await fetch(
-          `http://localhost:5000/api/shifts/specific?stations=${encodeURIComponent(stations[stationIndex])}&days=${encodeURIComponent(currentDay)}`
+          `http://localhost:5000/api/shifts/specific?stations=${encodeURIComponent(
+            currentStation
+          )}&days=${encodeURIComponent(currentDay)}`
         );
         const data = await response.json();
+
         if (response.ok) {
           setShifts(data);
           if (data.length > 0) {
             setSelectedIndex(0);
-            onSelectionChange(stations[stationIndex], data[0]);
+            onSelectionChange(currentStation, data[0]);
           } else {
             setSelectedIndex(-1);
-            onSelectionChange(stations[stationIndex], null);
+            onSelectionChange(currentStation, null);
           }
         } else {
-          console.error("Error from server:", data.error);
+          console.error("Error fetching shifts:", data.error);
         }
       } catch (error) {
         console.error("Error fetching shifts:", error);
@@ -45,8 +95,9 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
     };
 
     fetchShifts();
-  }, [stationIndex, currentDay, onSelectionChange]); // Include onSelectionChange as a stable dependency
+  }, [stationIndex, currentDay, currentStation, onSelectionChange]);
 
+  // Update clock
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -54,29 +105,24 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
     return () => clearInterval(timer);
   }, []);
 
-  const handleShiftChange = (newIndex: number) => {
-    if (newIndex >= 0 && newIndex < shifts.length) {
-      setSelectedIndex(newIndex);
-      onSelectionChange(stations[stationIndex], shifts[newIndex]);
-    }
-  };
-
   const handleStationChange = (newIndex: number) => {
     if (newIndex >= 0 && newIndex < stations.length) {
       setStationIndex(newIndex);
     }
   };
 
+  const handleShiftChange = (newIndex: number) => {
+    if (newIndex >= 0 && newIndex < shifts.length) {
+      setSelectedIndex(newIndex);
+      onSelectionChange(currentStation, shifts[newIndex]);
+    }
+  };
+
   const currentShift = shifts[selectedIndex];
-  const todayDate = currentTime.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "2-digit",
-  }).split("/").reverse().join(".");
 
   return (
     <div className="h-16 border-b border-gray-800 px-4 flex items-center justify-between relative">
       <div className="flex items-center gap-4">
-        
         {!sidebarOpen && (
           <AlignJustify className="cursor-pointer" onClick={() => setSidebarOpen(true)} />
         )}
@@ -86,6 +132,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
           </div>
         )}
 
+        {/* Station Control */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <button
@@ -105,11 +152,14 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
           </div>
           <div>
             <div className="text-[10px] uppercase text-gray-400 leading-tight text-left">STATION</div>
-            <div className="text-lg font-semibold leading-tight">{stations[stationIndex]}</div>
+            <div className="text-lg font-semibold leading-tight">
+              {currentStation || "Loading..."}
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Center Shift Control */}
       <div className="flex items-left gap-6 justify-center flex-1">
         <div className="flex gap-1">
           <button
@@ -137,7 +187,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
         <div className="flex flex-col items-left">
           <div className="text-[10px] uppercase text-gray-400 leading-tight text-left">SHIFT</div>
           <div className="text-lg font-semibold leading-tight">
-            {currentShift 
+            {currentShift
               ? `${currentDay} ${todayDate} - (${currentShift.shiftName})`
               : "No Shift Available"}
           </div>
@@ -150,6 +200,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
         </div>
       </div>
 
+      {/* Clock & Settings */}
       <div className="flex items-center gap-4">
         <div className="text-4xl font-mono tabular-nums">
           {currentTime.toLocaleTimeString("en-US", {
@@ -163,7 +214,6 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
           <Settings className="w-5 h-5" />
         </button>
       </div>
-      
     </div>
   );
 }

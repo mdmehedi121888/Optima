@@ -21,15 +21,37 @@ interface ProductRecord {
   updated_at: string | null;
 }
 
+interface TotalOEE {
+  shift: string;
+  totalPlannedMinutes: number;
+  totalRunningMinutes: number;
+  totalDowntimeMinutes: number;
+  totalAchievedQty: number;
+  totalTargetQty: number;
+  totalGoodQty: number;
+  availability: number;
+  performance: number;
+  quality: number;
+  oee: number;
+}
+
+interface OEEMetricsResponse {
+  message: string;
+  data: {
+    hourlyOEE: any[];
+    totalOEE: TotalOEE;
+  };
+}
+
 interface BatchInfoProps {
   station: string;
   shift: string;
-  productionQty: number;
 }
 
-export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
+export function BatchInfo({ station, shift }: BatchInfoProps) {
   const [currentBatch, setCurrentBatch] = useState<string>("NA");
-  const [targetQty, setTargetQty] = useState<number>(0);
+  const [totalTargetQty, setTotalTargetQty] = useState<number>(0);
+  const [totalAchievedQty, setTotalAchievedQty] = useState<number>(0);
   const [oee, setOee] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,14 +76,45 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
     }
   };
 
-  // Fetch product records
+  // Fetch OEE metrics
+  const fetchOEEMetrics = async () => {
+    try {
+      if (!station || !shift) {
+        setTotalTargetQty(0);
+        setTotalAchievedQty(0);
+        setOee(0);
+        setError("Station or shift not selected");
+        return;
+      }
+
+      const productionDate = new Date().toISOString().split("T")[0]; // Current date in YYYY-MM-DD format
+      const response = await fetch(
+        `http://localhost:5000/api/oee-metrics/get/by-date?station=${encodeURIComponent(station)}&productionDate=${productionDate}&shift=${shift}`,
+        { credentials: "include" }
+      );
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data: OEEMetricsResponse = await response.json();
+      const totalOEEData = data.data.totalOEE;
+
+      setTotalTargetQty(totalOEEData.totalTargetQty);
+      setTotalAchievedQty(totalOEEData.totalAchievedQty);
+      setOee(Number(totalOEEData.oee.toFixed(2)));
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching OEE metrics:", error);
+      setError("Failed to fetch OEE metrics. Check server status.");
+      setTotalTargetQty(0);
+      setTotalAchievedQty(0);
+      setOee(0);
+    }
+  };
+
+  // Fetch product records for current batch
   const fetchProductRecords = async () => {
     try {
       if (!station || !shift) {
         setCurrentBatch("NA");
-        setTargetQty(0);
-        setOee(0);
-        setError("Station or shift not selected");
         return;
       }
 
@@ -71,7 +124,6 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data: ProductRecord[] = await response.json();
-      // console.log("Fetched product records:", data);
 
       const records: ProductRecord[] = Array.isArray(data)
         ? data.map((item) => ({
@@ -94,12 +146,9 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
           }))
         : [];
 
-      // console.log("Mapped records:", records);
-
-      // Determine current batch and calculate quantities
-      const currentTime = new Date("2025-04-29T15:00:00"); // Mock time for testing
+      // Determine current batch
+      const currentTime = new Date(); // Use actual current time: June 17, 2025, 12:09 PM +06
       let foundBatch = "NA";
-      let activeProduct: ProductRecord | null = null;
 
       for (const record of records) {
         try {
@@ -139,7 +188,6 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
             currentTotalMinutes <= endTotalMinutes
           ) {
             foundBatch = record.productName;
-            activeProduct = record;
             break;
           }
         } catch (error) {
@@ -147,74 +195,25 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
         }
       }
 
-      // console.log("Selected active product:", activeProduct);
-
       setCurrentBatch(foundBatch);
-
-      // Calculate target quantity and OEE
-      if (activeProduct) {
-        const target = calculateTargetQty(activeProduct);
-        setTargetQty(target);
-
-        const oeeValue = target > 0 ? (productionQty / target) * 100 : 0;
-
-        // console.log("production qty and target: ",productionQty,target);
-        
-        setOee(Number(oeeValue.toFixed(2)));
-
-        setError(null);
-      } else {
-        // console.log("No active product found or invalid times");
-        setTargetQty(0);
-        setOee(0);
-        // setError("No active product found for the current time");
-      }
     } catch (error) {
       console.error("Error fetching product records:", error);
-      setError("Failed to fetch product records. Check server status.");
-    }
-  };
-
-  // Calculate target quantity
-  const calculateTargetQty = (product: ProductRecord): number => {
-    try {
-      const unitsPerMinute = parseInt(product.cycleTime) / 60;
-
-      const start = parseTime(product.startTime);
-      const end = parseTime(product.endTime);
-      if (!start || !end) {
-        console.log(`Invalid time range for product ID ${product.id}`);
-        return 0;
-      }
-
-      let startMinutes = start.getHours() * 60 + start.getMinutes();
-      let endMinutes = end.getHours() * 60 + end.getMinutes();
-
-      if (endMinutes < startMinutes) {
-        endMinutes += 24 * 60;
-      }
-
-      const durationMinutes = endMinutes - startMinutes;
-      const target = durationMinutes * unitsPerMinute;
-
-      // console.log(`Target quantity for product ID ${product.id}: ${target} (duration: ${durationMinutes} minutes, ${unitsPerMinute} units/minute)`);
-      return target;
-    } catch (error) {
-      console.error("Error calculating target quantity:", error);
-      return 0;
+      setCurrentBatch("NA");
     }
   };
 
   useEffect(() => {
+    fetchOEEMetrics();
     fetchProductRecords();
-    const interval = setInterval(fetchProductRecords, 60000);
+    const interval = setInterval(() => {
+      fetchOEEMetrics();
+      fetchProductRecords();
+    }, 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, [station, shift]);
 
   return (
     <div className="p-6 bg-gray-900 rounded-xl flex-1 shadow-lg border border-gray-700 space-y-6">
-     
-     
       {/* Error Message */}
       {error && (
         <div className="bg-red-500/10 border border-red-500 text-red-400 p-4 rounded-lg flex items-center gap-2 animate-pulse">
@@ -244,10 +243,10 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
         <div className="flex justify-between items-center">
           <div className="flex items-baseline gap-2">
             <span className="text-5xl font-extrabold text-white tabular-nums tracking-tight">
-              {productionQty}
+              {totalAchievedQty}
             </span>
             <span className="text-lg text-gray-400">
-              / {targetQty.toFixed(2)} pcs
+              / {totalTargetQty} pcs
             </span>
           </div>
           <div className="text-right">
@@ -255,7 +254,7 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
               OEE
             </span>
             <span className="text-4xl font-extrabold text-green-400 tabular-nums">
-              {((productionQty/targetQty)*100).toFixed(2)}%
+              {oee.toFixed(2)}%
             </span>
           </div>
         </div>
@@ -271,7 +270,6 @@ export function BatchInfo({ station, shift, productionQty }: BatchInfoProps) {
           {currentBatch}
         </div>
       </div>
-      
     </div>
   );
 }

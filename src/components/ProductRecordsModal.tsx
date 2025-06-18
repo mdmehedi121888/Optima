@@ -190,7 +190,7 @@ import { FC, useEffect, useState } from "react";
          unitsPerSensorSignal: selectedProduct.unitsPerSensorSignal,
          startTime: formData.startTime,
          endTime: formData.endTime,
-         qty: parseInt(selectedProduct.cycleTime) * parseInt(selectedProduct.unitsPerSensorSignal),
+         qty: parseInt(selectedProduct.cycleTime),
          creator: user?.userId,
        };
 
