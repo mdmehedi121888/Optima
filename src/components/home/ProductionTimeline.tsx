@@ -90,8 +90,8 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
     try {
       const payload = {
         line: station,
-        startTime: shift?.startTime || "00:00",
-        endTime: shift?.endTime || "23:59",
+        startTime: shift?.startTime ,
+        endTime: shift?.endTime ,
       };
 
       const url = "http://localhost:5000/api/machineData";
@@ -485,52 +485,60 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
       </div>
 
       <div className="space-y-1">
-        {timeSlots.map((slot) => (
-          <div
-            key={slot.hour}
-            className="flex items-stretch h-8 bg-gray-800/50 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300"
-          >
-            <div className="w-16 flex items-center justify-end pr-3 text-sm font-semibold text-gray-300 tabular-nums">
-              {String(slot.hour).padStart(2, "0")}:00
-            </div>
-            
-            <div className="flex-1 grid grid-cols-[repeat(60,_minmax(0,_1fr))] gap-px bg-gray-700">
-              {slot.markers.map((marker, i) => {
-                const minuteStart = `${String(slot.hour).padStart(2, "0")}:${String(i).padStart(2, "0")}:00`;
-                const minuteEnd = `${String(slot.hour).padStart(2, "0")}:${String(i).padStart(2, "0")}:59`;
-                const hasData = slot.production[i] > 0 || slot.statuses[i] !== "none";
-                const tooltip =
-                  slot.downtimeStatuses[i].status
-                    ? `${minuteStart}–${minuteEnd}\nDowntime: ${slot.downtimeStatuses[i].status}\nProblem: ${slot.downtimeStatuses[i].problem_name}`
-                    : hasData
-                    ? `${minuteStart}–${minuteEnd}\nProduction: ${slot.production[i]} pcs`
-                    : undefined;
-                return (
-                  <div
-                    key={i}
-                    title={tooltip}
-                    className={`
-                      relative
-                      ${slot.downtimeStatuses[i].status === "planned" ? "bg-[#3674B5]" : ""}
-                      ${slot.downtimeStatuses[i].status === "unplanned" ? "bg-red-900" : ""}
-                      ${slot.statuses[i] === "red" ? "bg-[#E52020]" : ""}
-                      ${slot.statuses[i] === "green" ? "bg-[#0AAC00]" : ""}
-                      ${slot.statuses[i] === "yellow" ? "bg-[#FFEB00]" : ""}
-                      hover:opacity-80 transition-opacity duration-200
-                    `}
-                  />
-                );
-              })}
-            </div>
-           
-            <div className="w-24 flex items-center justify-end pl-3 text-sm font-semibold text-white tabular-nums">
-              {slot.hourlyProduction !== 0 || machineData.length > 0
-                ? `${slot.hourlyProduction}/${Math.round(slot.targetQty)}`
-                : `0/${Math.round(slot.targetQty)}`}
-            </div>
-          </div>
-        ))}
+       
+       
+       {timeSlots.map((slot) => {
+  if (slot.targetQty === 0) return null; // Skip this hour completely
+
+  return (
+    <div
+      key={slot.hour}
+      className="flex items-stretch h-8 bg-gray-800/50 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300"
+    >
+      <div className="w-16 flex items-center justify-end pr-3 text-sm font-semibold text-gray-300 tabular-nums">
+        {String(slot.hour).padStart(2, "0")}:00
       </div>
+
+      <div className="flex-1 grid grid-cols-[repeat(60,_minmax(0,_1fr))] gap-px bg-gray-700">
+        {slot.markers.map((marker, i) => {
+          const minuteStart = `${String(slot.hour).padStart(2, "0")}:${String(i).padStart(2, "0")}:00`;
+          const minuteEnd = `${String(slot.hour).padStart(2, "0")}:${String(i).padStart(2, "0")}:59`;
+          const hasData = slot.production[i] > 0 || slot.statuses[i] !== "none";
+          const tooltip =
+            slot.downtimeStatuses[i].status
+              ? `${minuteStart}–${minuteEnd}\nDowntime: ${slot.downtimeStatuses[i].status}\nProblem: ${slot.downtimeStatuses[i].problem_name}`
+              : hasData
+              ? `${minuteStart}–${minuteEnd}\nProduction: ${slot.production[i]} pcs`
+              : undefined;
+
+          return (
+            <div
+              key={i}
+              title={tooltip}
+              className={`
+                relative
+                ${slot.downtimeStatuses[i].status === "planned" ? "bg-[#3674B5]" : ""}
+                ${slot.downtimeStatuses[i].status === "unplanned" ? "bg-red-900" : ""}
+                ${slot.statuses[i] === "red" ? "bg-[#E52020]" : ""}
+                ${slot.statuses[i] === "green" ? "bg-[#0AAC00]" : ""}
+                ${slot.statuses[i] === "yellow" ? "bg-[#FFEB00]" : ""}
+                hover:opacity-80 transition-opacity duration-200
+              `}
+            />
+          );
+        })}
+      </div>
+
+      <div className="w-24 flex items-center justify-end pl-3 text-sm font-semibold text-white tabular-nums">
+        {slot.hourlyProduction !== 0 || machineData.length > 0
+          ? `${slot.hourlyProduction}/${Math.round(slot.targetQty)}`
+          : `0/${Math.round(slot.targetQty)}`}
+      </div>
+    </div>
+  );
+})}
+      </div>
+      
     </div>
   );
 }

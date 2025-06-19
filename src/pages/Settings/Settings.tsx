@@ -10,6 +10,7 @@ import {
   LaptopMinimal,
   UsersRound,
   Calendar,
+  MapPin,
 } from "lucide-react";
 import Sidebar from "../../components/common/Sidebar";
 import { useState } from "react";
@@ -58,12 +59,12 @@ export const settings: SettingItem[] = [
     description: "Manage reasons that operators use to comment on quality loss.",
     link: "/settings/scrap-reasons",
   },
-  // {
-  //   icon: <MapPin size={24} className="text-red-500" />,
-  //   title: "Locations",
-  //   description: "Use locations to get more insight into production downtime.",
-  //   link: "/settings/locations",
-  // },
+  {
+    icon: <MapPin size={24} className="text-red-500" />,
+    title: "Locations",
+    description: "Use locations to get more insight into production downtime.",
+    link: "/settings/locations",
+  },
   {
     icon: <LaptopMinimal size={24} className="text-blue-500" />,
     title: "Stations",
