@@ -1,31 +1,31 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Page from "./page";
-import LoginForm from "./Login";
-import Settings from "./Settings";
-import Users from "./components/Users";
-import Profile from "./components/Profile";
-import Operators from "./components/Operators";
-import StopReason from "./components/StopReasons";
-import SpeedLossReasons from "./components/SpeedLossReasons";
-import ScrapReasons from "./components/ScrapReasons";
-import Locations from "./components/Locations";
-import Stations from "./components/Stations";
-import Products from "./components/Products";
-import Shifts from "./components/Shifts";
-import Logout from "./components/Logout";
-import ProtectedRoute from "./components/ProtectedRoute";
-import NotFound from "./components/NotFound";
-import Sidebar from "./components/Sidebar";
-import Layout from "./components/Layout";
+import Page from "./pages/Home/page";
+import LoginForm from "./pages/Auth/Login";
+import Settings from "./pages/Settings/Settings";
+import Users from "./components/settings/users/Users";
+import Profile from "./components/settings/profile/Profile";
+import Operators from "./components/settings/operators/Operators";
+import StopReason from "./components/settings/stopReasons/StopReasons";
+import SpeedLossReasons from "./components/settings/speedLoss/SpeedLossReasons";
+import ScrapReasons from "./components/settings/scrap/ScrapReasons";
+import Locations from "./components/settings/locations/Locations";
+import Stations from "./components/settings/stations/Stations";
+import Products from "./components/settings/products/Products";
+import Shifts from "./components/settings/shifts/Shifts";
+import Logout from "./pages/Auth/Logout";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import NotFound from "./components/common/NotFound";
+import Sidebar from "./components/common/Sidebar";
+import Layout from "./components/common/Layout";
 import { Bounce, ToastContainer } from "react-toastify";
-import AdminRoute from "./components/AdminRoute";
-import NotAuthenticated from "./components/NotAuthenticated";
-import FactoryOverview from "./components/FactoryOverview";
-import Dashboards from "./components/Dashboards";
-import Reports from "./components/Reports";
-import InchargeRoute from "./components/InchargeRoute";
+import AdminRoute from "./components/common/AdminRoute";
+import NotAuthenticated from "./components/common/NotAuthenticated";
+import FactoryOverview from "./pages/FactoryOverview/FactoryOverview";
+import Dashboards from "./pages/Dashboards/Dashboards";
+import Reports from "./pages/Reports/Reports";
+import InchargeRoute from "./components/common/InchargeRoute";
 
 
 function App() {
@@ -58,8 +58,9 @@ function App() {
                     <Route path="/dashboards" element={<Dashboards />} />
                     <Route path="/reports" element={<Reports />} />
                 </Route>
+
             </Route>
-            </Route>
+          </Route>
 
           {/* ✅ Catch-All Route for 404 Pages */}
           <Route path="*" element={<NotFound />} />
