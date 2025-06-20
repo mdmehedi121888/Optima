@@ -336,16 +336,16 @@ export default function OEEReports() {
                         {new Date(record.productionDate).toLocaleDateString()}
                       </td>
                       <td className="p-3 text-center">
-                        {record.totalOEE.availability.toFixed(2)}
+                        {record?.totalOEE?.availability?.toFixed(2)}
                       </td>
                       <td className="p-3 text-center">
-                        {record.totalOEE.performance.toFixed(2)}
+                        {record?.totalOEE?.performance?.toFixed(2)}
                       </td>
                       <td className="p-3 text-center">
-                        {record.totalOEE.quality.toFixed(2)}
+                        {record?.totalOEE?.quality?.toFixed(2)}
                       </td>
                       <td className="p-3 text-center font-semibold">
-                        {record.totalOEE.oee.toFixed(2)}
+                        {record?.totalOEE?.oee?.toFixed(2)}
                       </td>
                     </tr>
                   ))}

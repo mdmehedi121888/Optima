@@ -101,37 +101,12 @@ export function PerformanceChart({ station, shift }: PerformanceChartProps) {
         setHourlyOEE(hourlyOEEData);
         setError(null);
 
-        // Calculate totals from hourlyOEE (or use totalOEE from API)
-        const validOEE = hourlyOEEData.filter((entry) => entry.oee !== null);
-        const validAvailability = hourlyOEEData.filter((entry) => entry.availability !== null);
-        const validPerformance = hourlyOEEData.filter((entry) => entry.performance !== null);
-        const validQuality = hourlyOEEData.filter((entry) => entry.quality !== null);
-
-        setTotalOEE(
-          validOEE.length > 0
-            ? validOEE.reduce((sum, entry) => sum + entry.oee, 0) / validOEE.length
-            : 0
-        );
-        
-        setTotalAvailability(
-          validAvailability.length > 0
-            ? validAvailability.reduce((sum, entry) => sum + entry.availability, 0) /
-              validAvailability.length
-            : 0
-        );
-
-        setTotalPerformance(
-          validPerformance.length > 0
-            ? validPerformance.reduce((sum, entry) => sum + entry.performance, 0) /
-              validPerformance.length
-            : 0
-        );
-
-        setTotalQuality(
-          validQuality.length > 0
-            ? validQuality.reduce((sum, entry) => sum + entry.quality, 0) / validQuality.length
-            : 0
-        );
+        // Use totalOEE values from API response
+        const totalOEEData = data.data.totalOEE;
+        setTotalOEE(totalOEEData.oee || 0);
+        setTotalAvailability(totalOEEData.availability || 0);
+        setTotalPerformance(totalOEEData.performance || 0);
+        setTotalQuality(totalOEEData.quality || 0);
       } catch (error) {
         console.error("Error fetching OEE metrics:", error);
         setError("Failed to fetch OEE metrics. Check server status.");
@@ -140,7 +115,7 @@ export function PerformanceChart({ station, shift }: PerformanceChartProps) {
     };
 
     fetchOEEMetrics();
-    const interval = setInterval(fetchOEEMetrics, 60000); // Refresh every minute
+    const interval = setInterval(fetchOEEMetrics, 15000); // Refresh in 15 seconds
     return () => clearInterval(interval);
   }, [station, shift]);
 
@@ -277,7 +252,7 @@ export function PerformanceChart({ station, shift }: PerformanceChartProps) {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-baseline gap-2">
-          <span className="text-lg text-gray-400">OEE for {station}</span>
+          <span className="text-lg text-gray-15">OEE for {station}</span>
         </div>
         <div className="flex items-center gap-6 text-sm">
           <span className="text-gray-400 font-semibold uppercase tracking-wider">

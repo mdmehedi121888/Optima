@@ -208,7 +208,7 @@ export function BatchInfo({ station, shift }: BatchInfoProps) {
     const interval = setInterval(() => {
       fetchOEEMetrics();
       fetchProductRecords();
-    }, 60000); // Refresh every minute
+    }, 15000); // Refresh in 15 seconds
     return () => clearInterval(interval);
   }, [station, shift]);
 
