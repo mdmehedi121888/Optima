@@ -2,6 +2,7 @@ import { FC, useContext, useEffect, useState } from "react";
 import { Modal } from "../common/Modal";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
+import { locations } from "../common/lib/fetchLocations";
 
 interface Product {
   id: number;
@@ -47,18 +48,8 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({
   });
   const [problemGroups, setProblemGroups] = useState<string[]>([]);
   const [problemReasons, setProblemReasons] = useState<string[]>([]);
-
-  const locations = [
-    "QC রিলেটেড",
-    "R&D ট্রায়াল রিলেটেড",
-    "ইলেকট্রনিক্স ও মেকানিকাল মেইনটেন্যান্স",
-    "মেকানিকাল মেইনটেন্যান্স",
-    "QC ও R&D ট্রায়াল রিলেটেড",
-    "প্রোডাকশন রিলেটেড",
-    "ইউটিলিটি",
-    "ডাই মেইনটেন্যান্স",
-  ];
-
+  
+  
   const auth = useContext(AuthContext);
 
   const creator = auth?.user?.userId;
@@ -198,7 +189,7 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({
   };
 
   return (
-    <Modal title="Create Downtime Record" onClose={onClose}>
+    creator ?  ( <Modal title="Create Downtime Record" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-gray-300 mb-1">Product</label>
@@ -325,6 +316,9 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({
           </button>
         </div>
       </form>
-    </Modal>
+    </Modal>):(
+      <h1>Loading.......</h1>
+    )
+   
   );
 };

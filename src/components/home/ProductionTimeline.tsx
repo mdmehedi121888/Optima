@@ -233,48 +233,48 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
   };
 
   // Post OEE metrics
-  const postOEEMetrics = async () => {
-    try {
-      if (!shift || !station || !productRecords.length) return;
+  // const postOEEMetrics = async () => {
+  //   try {
+  //     if (!shift || !station || !productRecords.length) return;
 
-      const payload = {
-        station,
-        productionDate: new Date().toISOString().split("T")[0],
-        shift: shift.shiftName,
-        shiftStartTime: parseInt(shift.startTime.split(":")[0]),
-        shiftEndTime: parseInt(shift.endTime.split(":")[0]),
-        creator,
-      };
+  //     const payload = {
+  //       station,
+  //       productionDate: new Date().toISOString().split("T")[0],
+  //       shift: shift.shiftName,
+  //       shiftStartTime: parseInt(shift.startTime.split(":")[0]),
+  //       shiftEndTime: parseInt(shift.endTime.split(":")[0]),
+  //       creator,
+  //     };
 
-      const response = await fetch("http://localhost:5000/api/oee-metrics/post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+  //     const response = await fetch("http://localhost:5000/api/oee-metrics/post", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error("Error posting OEE metrics:", error);
-      setError("Failed to post OEE metrics. Check server status.");
-    }
-  };
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! Status: ${response.status}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error posting OEE metrics:", error);
+  //     setError("Failed to post OEE metrics. Check server status.");
+  //   }
+  // };
 
   useEffect(() => {
     fetchMachineData();
     fetchDowntimeRecords();
     fetchProductRecords();
     fetchOEEMetrics();
-    postOEEMetrics();
+    // postOEEMetrics();
     const interval = setInterval(() => {
       fetchMachineData();
       fetchDowntimeRecords();
       fetchProductRecords();
       fetchOEEMetrics();
-      postOEEMetrics();
+      // postOEEMetrics();
     }, 15000);
     return () => clearInterval(interval);
   }, [station, shift]);
@@ -352,7 +352,7 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
         });
       });
 
-      // Apply downtime periods
+      // Apply downtime periods only for hours with active products
       downtimeRecords.forEach((record, index) => {
         if (record.startTime && record.endTime) {
           try {
@@ -374,7 +374,8 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
             endMinute = endMinute - 1;
 
             slots.forEach((slot) => {
-              if (slot.hour >= startHour && slot.hour <= endHour) {
+              // Only apply downtime if the hour has an active product
+              if (hourToProductMap[slot.hour] && slot.hour >= startHour && slot.hour <= endHour) {
                 const startMin = slot.hour === startHour ? startMinute : 0;
                 const endMin = slot.hour === endHour ? endMinute : 59;
 
@@ -455,6 +456,11 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
 
         slots.forEach((slot) => {
           const activeProduct = hourToProductMap[slot.hour];
+          // Skip processing if no active product
+          if (!activeProduct) {
+            return;
+          }
+
           const cycleTime = activeProduct ? Number(activeProduct.cycleTime) : 0;
           const unitsPerSensorSignal = activeProduct ? Number(activeProduct.unitsPerSensorSignal) : 1;
           const productionThreshold = cycleTime / 60;
@@ -467,20 +473,18 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
           });
           slot.targetQty = oeeMetric ? oeeMetric.targetPerHour : 0;
 
-          if (activeProduct) {
-            const start = parseTime(activeProduct.startTime);
-            const end = parseTime(activeProduct.endTime);
-            if (start && end) {
-              let startTotalMinutes = start.getHours() * 60 + start.getMinutes();
-              let endTotalMinutes = end.getHours() * 60 + end.getMinutes();
-              if (endTotalMinutes < startTotalMinutes) {
-                endTotalMinutes += 24 * 60;
-              }
-              const slotStartMinutes = slot.hour * 60;
-              const slotEndMinutes = slotStartMinutes + 59;
-              if (slotStartMinutes >= startTotalMinutes && slotEndMinutes <= endTotalMinutes) {
-                slot.unitsPerSensorSignal = unitsPerSensorSignal;
-              }
+          const start = parseTime(activeProduct.startTime);
+          const end = parseTime(activeProduct.endTime);
+          if (start && end) {
+            let startTotalMinutes = start.getHours() * 60 + start.getMinutes();
+            let endTotalMinutes = end.getHours() * 60 + end.getMinutes();
+            if (endTotalMinutes < startTotalMinutes) {
+              endTotalMinutes += 24 * 60;
+            }
+            const slotStartMinutes = slot.hour * 60;
+            const slotEndMinutes = slotStartMinutes + 59;
+            if (slotStartMinutes >= startTotalMinutes && slotEndMinutes <= endTotalMinutes) {
+              slot.unitsPerSensorSignal = unitsPerSensorSignal;
             }
           }
 
@@ -547,8 +551,6 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
 
       <div className="space-y-1">
         {timeSlots.map((slot) => {
-          // if (slot.targetQty === 0) return null; // Skip this hour completely
-
           return (
             <div
               key={slot.hour}

@@ -1,7 +1,7 @@
 import { FC, useContext, useEffect, useState } from "react";
 import { Modal } from "../../common/Modal";
 import Swal from "sweetalert2";
-import { AuthContext } from "../../../context/AuthContext";
+import { AuthContext, UserType } from "../../../context/AuthContext";
 
 interface Shift {
   shiftName: string;
@@ -40,9 +40,30 @@ export const ProductModal: FC<ProductModalProps> = ({
   onClose,
   onSubmitSuccess,
 }) => {
-  const auth = useContext(AuthContext);
 
-  const creator = auth?.user?.userId;
+const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          credentials: 'include',
+        });
+        const data = await response.json();
+        if (data.isAuthenticated) {
+          setUser(data.user as UserType);
+        }
+      } catch (error) {
+        console.error('Error fetching user session:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
+
+
   const [formData, setFormData] = useState<ProductRecord>({
     productId: "",
     startTime: "",
@@ -59,7 +80,8 @@ export const ProductModal: FC<ProductModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.productId || !formData.startTime || !formData.endTime || !creator) {
+    // console.log("creator: ",user?.userId);
+    if (!formData.productId || !formData.startTime || !formData.endTime || !user?.userId) {
       Swal.fire({
         position: "center",
         icon: "warning",
@@ -94,7 +116,7 @@ export const ProductModal: FC<ProductModalProps> = ({
       startTime: formData.startTime,
       endTime: formData.endTime,
       qty: parseInt(selectedProduct.cycleTime),
-      creator:creator,
+      creator:user?.userId,
     };
 
     try {

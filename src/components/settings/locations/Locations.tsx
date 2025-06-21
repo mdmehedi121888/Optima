@@ -7,6 +7,7 @@ import { useState, useEffect, useContext } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../context/AuthContext";
+import { availableStations } from "../../common/lib/fetchStations";
 
 interface LocationFormData {
   id?: number;
@@ -25,9 +26,6 @@ interface Location {
   sys_date_time: string;
   updated_at: string | null;
 }
-
-
-const availableStations = ["Final Line", "Internal Line", "External Line", "Valve Plate"];
 
 export default function Locations() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);

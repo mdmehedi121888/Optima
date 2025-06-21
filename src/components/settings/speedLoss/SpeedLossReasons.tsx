@@ -16,6 +16,7 @@ import { useState, useEffect, useContext } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../context/AuthContext";
+import { availableStations } from "../../common/lib/fetchStations";
 
 interface SpeedLossReasonFormData {
   id?: number;
@@ -38,7 +39,6 @@ interface SpeedLossReason {
 }
 
 
-const availableStations = ["Final Line", "Internal Line", "External Line", "Valve Plate"];
 
 export default function SpeedLossReasons() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);

@@ -8,9 +8,6 @@ import { BatchInfo } from "../../components/home/BatchInfo";
 import { PerformanceChart } from "../../components/home/PerformanceChart";
 import { ProductionTimeline } from "../../components/home/ProductionTimeline";
 
-
-
-
 export interface Shift {
   id: number;
   shiftName: string;
@@ -21,49 +18,13 @@ export interface Shift {
   is_active: number;
 }
 
-interface Station {
-  id: number;
-  stations: string;
-  stationsGroup: string;
-  requireOperator: string;
-  emptyShiftReason: string;
-  unhappyOee: number;
-  happyOee: number;
-  is_active: number;
-  creator: string | null;
-  sys_date_time: string;
-  updated_at: string | null;
-}
-
 export default function Page() {
   const [selectedStation, setSelectedStation] = useState("Final Line");
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [count, setCount] = useState(0);
-  const [stations, setStations] = useState<Station[]>([]);
   
 
   const auth = useContext(AuthContext);
-
-
-  // Fetch stations once
-  useEffect(() => {
-    const fetchStations = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/stations");
-        const data = await response.json();
-        if (response.ok) {
-          setStations(data);
-        } else {
-          console.error("Error fetching stations:", data.error);
-        }
-      } catch (error) {
-        console.error("Error fetching stations:", error);
-      }
-    };
-
-    fetchStations();
-  }, []);
-
 
   // Handle station & shift change
   const handleSelectionChange = useCallback(
@@ -96,43 +57,6 @@ export default function Page() {
       fetchProductRecords();
     }
   }, [selectedStation, selectedShift]);
-
-    
- const postOEEMetrics = async () => {
-  try {
-    if (!selectedShift || !selectedStation ) return;
-
-    const creator = auth?.user?.userId;
-
-    for (const station of stations) {
-      const payload = {
-        station: station.stations,
-        productionDate: new Date().toISOString().split("T")[0],
-        shift: selectedShift.shiftName,
-        shiftStartTime: parseInt(selectedShift.startTime.split(":")[0]),
-        shiftEndTime: parseInt(selectedShift.endTime.split(":")[0]),
-        creator,
-      };
-
-      const response = await fetch("http://localhost:5000/api/oee-metrics/post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`POST error for station ${station.stations}! Status: ${response.status}`);
-      }
-    }
-  } catch (error) {
-    console.error("Error posting OEE metrics:", error);
-  }
-};
-
-   
-
   
 
   // Fetch OEE metrics
@@ -163,7 +87,6 @@ export default function Page() {
   // Poll every 15 seconds for OEE post + get
   useEffect(() => {
     const interval = setInterval(() => {
-      postOEEMetrics();
       getOEEMetrics();
     }, 15000);
 

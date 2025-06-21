@@ -3,6 +3,7 @@ import { Modal } from "../../common/Modal";
 import { Plus, Edit, Trash } from "lucide-react";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../../context/AuthContext";
+import { locations } from "../../common/lib/fetchLocations";
 
 interface ScrapFormData {
   id?: number;
@@ -46,17 +47,6 @@ export const ScrapRecordsModal: FC<ScrapRecordsModalProps> = ({
     creator: "",
   });
   const [scrapReasons, setScrapReasons] = useState<string[]>([]);
-
-  const locations = [
-    "QC রিলেটেড",
-    "R&D ট্রায়াল রিলেটেড",
-    "ইলেকট্রনিক্স ও মেকানিকাল মেইনটেন্যান্স",
-    "মেকানিকাল মেইনটেন্যান্স",
-    "QC ও R&D ট্রায়াল রিলেটেড",
-    "প্রোডাকশন রিলেটেড",
-    "ই�ユটিলিটি",
-    "ডাই মেইনটেন্যান্স",
-  ];
 
  const auth = useContext(AuthContext);
  const creator = auth?.user?.userId;

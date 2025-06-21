@@ -10,28 +10,14 @@ import {
 import { useEffect, useState } from "react";
 import Sidebar from "../common/Sidebar";
 import { Shift } from "../../pages/Home/page";
+import { availableStations } from "../common/lib/fetchStations";
 
 interface DashboardHeaderProps {
   onSelectionChange: (station: string, shift: Shift | null) => void;
 }
 
-interface Station {
-  id: number;
-  stations: string;
-  stationsGroup: string;
-  requireOperator: string;
-  emptyShiftReason: string;
-  unhappyOee: number;
-  happyOee: number;
-  is_active: number;
-  creator: string | null;
-  sys_date_time: string;
-  updated_at: string | null;
-}
-
 export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
-  const [stations, setStations] = useState<Station[]>([]);
   const [stationIndex, setStationIndex] = useState<number>(0);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -43,26 +29,8 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
     month: "2-digit",
   }).split("/").reverse().join(".");
 
-  const currentStation = stations[stationIndex]?.stations || "";
+  const currentStation = availableStations[stationIndex] || "";
 
-  // Fetch stations once
-  useEffect(() => {
-    const fetchStations = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/stations");
-        const data = await response.json();
-        if (response.ok) {
-          setStations(data);
-        } else {
-          console.error("Error fetching stations:", data.error);
-        }
-      } catch (error) {
-        console.error("Error fetching stations:", error);
-      }
-    };
-
-    fetchStations();
-  }, []);
 
   // Fetch shifts when station or day changes
   useEffect(() => {
@@ -106,7 +74,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
   }, []);
 
   const handleStationChange = (newIndex: number) => {
-    if (newIndex >= 0 && newIndex < stations.length) {
+    if (newIndex >= 0 && newIndex < availableStations.length) {
       setStationIndex(newIndex);
     }
   };
@@ -145,7 +113,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
             <button
               className="p-1 hover:bg-gray-800 rounded-full"
               onClick={() => handleStationChange(stationIndex + 1)}
-              disabled={stationIndex === stations.length - 1}
+              disabled={stationIndex === availableStations.length - 1}
             >
               <ChevronRight className="w-5 h-5" />
             </button>

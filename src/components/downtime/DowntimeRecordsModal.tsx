@@ -3,6 +3,7 @@ import { Modal } from "../common/Modal";
 import { Plus, Edit, Trash } from "lucide-react";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
+import { locations } from "../common/lib/fetchLocations";
 
 
 interface Product {
@@ -50,17 +51,6 @@ export const DowntimeRecordsModal: FC<DowntimeRecordsModalProps> = ({
   });
   const [problemGroups, setProblemGroups] = useState<string[]>([]);
   const [problemReasons, setProblemReasons] = useState<string[]>([]);
-
-  const locations = [
-    "QC রিলেটেড",
-    "R&D ট্রায়াল রিলেটেড",
-    "ইলেকট্রনিক্স ও মেকানিকাল মেইনটেন্যান্স",
-    "মেকানিকাল মেইনটেন্যান্স",
-    "QC ও R&D ট্রায়াল রিলেটেড",
-    "প্রোডাকশন রিলেটেড",
-    "ইউটিলিটি",
-    "ডাই মেইনটেন্যান্স",
-  ];
 
  const auth = useContext(AuthContext);
  

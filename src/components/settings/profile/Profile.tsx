@@ -4,8 +4,8 @@ import { AuthContext } from "../../../context/AuthContext";
 
 
 export default function Profile() {
-const auth = useContext(AuthContext);
-const creator = auth?.user?.userId;
+const auth =  useContext(AuthContext);
+const creator =  auth?.user?.userId;
 const userName = auth?.user?.userName;
 const userId = auth?.user?.userId;
 const userImage = auth?.user?.userImage;
