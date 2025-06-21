@@ -91,9 +91,13 @@ export default function OEEReports() {
 
   // Prepare data for bar chart (current page records)
   const getCurrentPageRecordsData = () => {
-    const labels: string[] = paginatedOEERecords.map((record) =>
-      new Date(record.productionDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    );
+
+const labels: string[] = paginatedOEERecords.map(
+  (record) =>
+    `${new Date(record.productionDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${record.station} (${record.shift})`
+);
+
+
     const availabilityData: number[] = paginatedOEERecords.map((record) => record.totalOEE.availability);
     const performanceData: number[] = paginatedOEERecords.map((record) => record.totalOEE.performance);
     const qualityData: number[] = paginatedOEERecords.map((record) => record.totalOEE.quality);

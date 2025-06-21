@@ -74,7 +74,7 @@ export default function QuantitiesReports() {
   // Prepare data for bar chart
   const getCurrentPageRecordsData = () => {
     const labels: string[] = paginatedRecords.map((record) =>
-      new Date(record.productionDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      `${new Date(record.productionDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}- ${record.station} (${record.shift})`
     );
     const targetQtyData: number[] = paginatedRecords.map((record) => record.totalOEE.totalTargetQty);
     const achievedQtyData: number[] = paginatedRecords.map((record) => record.totalOEE.totalAchievedQty);
