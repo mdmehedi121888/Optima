@@ -3,10 +3,10 @@ import {
   X,
   Search,
 } from "lucide-react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
-import { AuthContext } from "../../../context/AuthContext";
+import {  UserType } from "../../../context/AuthContext";
 import { availableStations } from "../../common/lib/fetchStations";
 
 interface ScrapReasonFormData {
@@ -53,8 +53,27 @@ export default function ScrapReasons() {
 
   const selectAllStations = watch("selectAllStations");
   const selectedStations = watch("stations", []);
-  const auth = useContext(AuthContext);
-    const creator = auth?.user?.userId;
+  const [user, setUser] = useState<UserType | null>(null);
+    
+      useEffect(() => {
+        const fetchUser = async () => {
+          try {
+            const response = await fetch('http://localhost:5000/api/auth/check-session', {
+              credentials: 'include',
+            });
+            const data = await response.json();
+            if (data.isAuthenticated) {
+              setUser(data.user as UserType);
+            }
+          } catch (error) {
+            console.error('Error fetching user session:', error);
+          }
+        };
+    
+        fetchUser();
+      }, []);
+
+    const creator = user?.userId;
 
   useEffect(() => {
     if (selectAllStations) {

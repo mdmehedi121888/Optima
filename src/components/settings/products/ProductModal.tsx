@@ -1,7 +1,7 @@
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Modal } from "../../common/Modal";
 import Swal from "sweetalert2";
-import { AuthContext, UserType } from "../../../context/AuthContext";
+import {  UserType } from "../../../context/AuthContext";
 
 interface Shift {
   shiftName: string;

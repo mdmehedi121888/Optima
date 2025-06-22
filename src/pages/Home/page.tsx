@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useContext } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { StatusBar } from "../../components/home/Footer";
-import { AuthContext } from "../../context/AuthContext";
 import { DashboardHeader } from "../../components/home/Header";
 import { BatchInfo } from "../../components/home/BatchInfo";
 import { PerformanceChart } from "../../components/home/PerformanceChart";
@@ -23,9 +22,6 @@ export default function Page() {
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [count, setCount] = useState(0);
   
-
-  const auth = useContext(AuthContext);
-
   // Handle station & shift change
   const handleSelectionChange = useCallback(
     (station: string, shift: Shift | null) => {

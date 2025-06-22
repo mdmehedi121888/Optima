@@ -69,11 +69,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           </li>
         </Link>
 
-        <Link to={"/dashboards"}>
+        {/* <Link to={"/dashboards"}>
           <li className="flex items-center gap-3 p-2 mt-3 hover:bg-gray-700 rounded cursor-pointer">
             <LayoutDashboard size={20} /> Dashboards
           </li>
-        </Link>
+        </Link> */}
 
         <Link to={"/reports"}>
           <li className="flex items-center gap-3 p-2 mt-3 hover:bg-gray-700 rounded cursor-pointer">

@@ -1,8 +1,8 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { Shift } from "../../pages/Home/page";
-import { AuthContext } from "../../context/AuthContext";
+import { UserType } from "../../context/AuthContext";
 
 interface MachineData {
   timestamp: string;
@@ -93,9 +93,27 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
   const [productRecords, setProductRecords] = useState<ProductRecord[]>([]);
   const [oeeMetrics, setOEEMetrics] = useState<OEEMetrics[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
+    
+      useEffect(() => {
+        const fetchUser = async () => {
+          try {
+            const response = await fetch('http://localhost:5000/api/auth/check-session', {
+              credentials: 'include',
+            });
+            const data = await response.json();
+            if (data.isAuthenticated) {
+              setUser(data.user as UserType);
+            }
+          } catch (error) {
+            console.error('Error fetching user session:', error);
+          }
+        };
+    
+        fetchUser();
+      }, []);
 
-  const auth = useContext(AuthContext);
-  const creator = auth?.user?.userId;
+  const creator = user?.userId;
 
   // Parse time string (e.g., "10:00:00" or "10:00") to Date
   const parseTime = (time: string): Date | null => {

@@ -1,17 +1,37 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, Shield, IdCard, UsersRound } from "lucide-react";
-import { AuthContext } from "../../../context/AuthContext";
+import {UserType } from "../../../context/AuthContext";
 
 
 export default function Profile() {
-const auth =  useContext(AuthContext);
-const creator =  auth?.user?.userId;
-const userName = auth?.user?.userName;
-const userId = auth?.user?.userId;
-const userImage = auth?.user?.userImage;
-const userRole = auth?.user?.role;
-const userDefaultStation = auth?.user?.defaultStation;
-const userStations = auth?.user?.stations;
+   const [user, setUser] = useState<UserType | null>(null);
+  
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            credentials: 'include',
+          });
+          const data = await response.json();
+          if (data.isAuthenticated) {
+            setUser(data.user as UserType);
+          }
+        } catch (error) {
+          console.error('Error fetching user session:', error);
+        }
+      };
+  
+      fetchUser();
+    }, []);
+
+
+const creator =  user?.userId;
+const userName = user?.userName;
+const userId = user?.userId;
+const userImage = user?.userImage;
+const userRole = user?.role;
+const userDefaultStation = user?.defaultStation;
+const userStations = user?.stations;
  
 
   if (!creator) {

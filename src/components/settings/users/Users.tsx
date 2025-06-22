@@ -1,24 +1,15 @@
-import { useNavigate } from "react-router-dom";
 import {
   User,
-  AlertTriangle,
-  Gauge,
-  Trash2,
-  MapPin,
-  Package,
-  LaptopMinimal,
-  UsersRound,
-  Calendar,
   Plus,
   X,
   EyeOff,
   Eye,
   Search,
 } from "lucide-react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Swal from "sweetalert2";
-import { AuthContext } from "../../../context/AuthContext";
+import {  UserType } from "../../../context/AuthContext";
 
 interface UserFormData {
     userId: string;
@@ -50,9 +41,27 @@ export default function Users() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const itemsPerPage = 10;
-
- const auth = useContext(AuthContext);
- const creator = auth?.user?.userId;
+const [user, setUser] = useState<UserType | null>(null);
+  
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            credentials: 'include',
+          });
+          const data = await response.json();
+          if (data.isAuthenticated) {
+            setUser(data.user as UserType);
+          }
+        } catch (error) {
+          console.error('Error fetching user session:', error);
+        }
+      };
+  
+      fetchUser();
+    }, []);
+    
+ const creator = user?.userId;
 
   useEffect(() => {
     if (isEditModalOpen && selectedUser) {
@@ -359,6 +368,7 @@ export default function Users() {
                   <option value="">Role</option>
                   <option value="Super Admin">Super Admin</option>
                   <option value="Incharge">Incharge</option>
+
                 </select>
                 <div className="w-full border border-green-500 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
                   <h1 className="text-left font-semibold text-lg p-2">Station</h1>

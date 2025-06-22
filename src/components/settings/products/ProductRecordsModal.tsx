@@ -1,8 +1,8 @@
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
    import { Modal } from "../../common/Modal";
    import { Plus, Edit, Trash } from "lucide-react";
    import Swal from "sweetalert2";
-import { AuthContext } from "../../../context/AuthContext";
+import {  UserType } from "../../../context/AuthContext";
 
    interface Shift {
      shiftName: string;
@@ -48,9 +48,28 @@ import { AuthContext } from "../../../context/AuthContext";
      onSubmitSuccess,
      onAdd,
    }) => {
-    const auth = useContext(AuthContext);
 
-  const creator = auth?.user?.userId;
+const [user, setUser] = useState<UserType | null>(null);
+  
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            credentials: 'include',
+          });
+          const data = await response.json();
+          if (data.isAuthenticated) {
+            setUser(data.user as UserType);
+          }
+        } catch (error) {
+          console.error('Error fetching user session:', error);
+        }
+      };
+  
+      fetchUser();
+    }, []);
+
+  const creator =user?.userId;
      const [editingRecord, setEditingRecord] = useState<ProductRecord | null>(null);
      const [formData, setFormData] = useState<ProductRecord>({
        productId: "",
