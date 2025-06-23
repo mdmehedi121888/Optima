@@ -9,7 +9,10 @@ import { ProductModal } from "../settings/products/ProductModal";
 import { ProductRecordsModal } from "../settings/products/ProductRecordsModal";
 import { ScrapModal } from "../settings/scrap/ScrapModal";
 import { ScrapRecordsModal } from "../settings/scrap/ScrapRecordsModal";
-import { Clock, Users, RefreshCw, Zap, Trash, Mail } from "lucide-react";
+import { Clock, Users, RefreshCw, Zap, Trash, Phone } from "lucide-react";
+import { SpeedLossRecordsModal } from "../settings/speedLoss/SpeedLossRecordsModal";
+import { SpeedLossModal } from "../settings/speedLoss/SpeedLossModal";
+import { ContactUsModal } from "./ContactUsModal";
 
 interface Shift {
   shiftName: string;
@@ -38,7 +41,6 @@ interface StatusCounts {
   downtime: number;
   speedLoss: number;
   scrap: number;
-  mail: number;
 }
 
 interface DowntimeFormData {
@@ -77,19 +79,34 @@ interface ScrapFormData {
   updated_at?: string | null;
 }
 
+interface SpeedLossFormData {
+  id?: number;
+  start_time: string;
+  end_time: string;
+  speed_loss_reason: string;
+  production_date: string;
+  shift: string;
+  station: string;
+  location: string;
+  creator: string;
+  is_active?: number;
+  sys_date_time?: string;
+  updated_at?: string | null;
+}
+
 export function StatusBar({ stations, shift }: { stations: string; shift: Shift | null }) {
   const [statusCounts, setStatusCounts] = useState<StatusCounts>({
     operators: 0,
     productChangeover: 0,
     downtime: 0,
     speedLoss: 0,
-    scrap: 0,
-    mail: 0,
+    scrap: 0
   });
   const [operators, setOperators] = useState<Operator[]>([]);
   const [downtimeRecords, setDowntimeRecords] = useState<DowntimeFormData[]>([]);
   const [productRecords, setProductRecords] = useState<ProductRecord[]>([]);
   const [scrapRecords, setScrapRecords] = useState<ScrapFormData[]>([]);
+  const [speedLossRecords, setSpeedLossRecords] = useState<SpeedLossFormData[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [showOperatorModal, setShowOperatorModal] = useState(false);
   const [showProductRecordsModal, setShowProductRecordsModal] = useState(false);
@@ -98,6 +115,9 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
   const [showDowntimeFormModal, setShowDowntimeFormModal] = useState(false);
   const [showScrapRecordsModal, setShowScrapRecordsModal] = useState(false);
   const [showScrapFormModal, setShowScrapFormModal] = useState(false);
+  const [showSpeedLossRecordsModal, setShowSpeedLossRecordsModal] = useState(false);
+  const [showSpeedLossFormModal, setShowSpeedLossFormModal] = useState(false);
+  const [showContactUsModal, setShowContactUsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -127,7 +147,6 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           downtime: data.downtime || prev.downtime,
           speedLoss: data.speedLoss || prev.speedLoss,
           scrap: data.scrap || prev.scrap,
-          mail: data.mail || prev.mail,
         }));
         setError(null);
       } catch (error) {
@@ -253,6 +272,48 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     };
 
     fetchScrapRecordsData();
+  }, [stations, shift]);
+
+  useEffect(() => {
+    const fetchSpeedLossRecordsData = async () => {
+      try {
+        if (!stations || !shift?.shiftName) return;
+        const response = await fetch(
+          `http://localhost:5000/api/speedLossReasons/speedLossRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch speed loss records");
+        const data = await response.json();
+
+        const records = Array.isArray(data)
+          ? data.map((item: any) => ({
+              id: item.id || 0,
+              start_time: item.start_time || "",
+              end_time: item.end_time || "",
+              speed_loss_reason: item.speed_loss_reason || "",
+              production_date: item.production_date || "",
+              shift: item.shift || "",
+              station: item.station || "",
+              location: item.location || "",
+              creator: item.creator || "",
+              is_active: item.is_active,
+              sys_date_time: item.sys_date_time,
+              updated_at: item.updated_at,
+            }))
+          : [];
+
+        setSpeedLossRecords(records);
+        setStatusCounts((prev) => ({
+          ...prev,
+          speedLoss: records.length,
+        }));
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching speed loss records data:", error);
+        setError("Failed to fetch speed loss records.");
+      }
+    };
+
+    fetchSpeedLossRecordsData();
   }, [stations, shift]);
 
   useEffect(() => {
@@ -391,6 +452,44 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     }
   };
 
+  const refreshSpeedLossRecords = async () => {
+    try {
+      if (!stations || !shift?.shiftName) return;
+      const response = await fetch(
+        `http://localhost:5000/api/speedLossReasons/speedLossRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+      );
+      if (!response.ok) throw new Error("Failed to refresh speed loss records");
+      const data = await response.json();
+
+      const records = Array.isArray(data)
+        ? data.map((item: any) => ({
+            id: item.id || 0,
+            start_time: item.start_time || "",
+            end_time: item.end_time || "",
+            speed_loss_reason: item.speed_loss_reason || "",
+            production_date: item.production_date || "",
+            shift: item.shift || "",
+            station: item.station || "",
+            location: item.location || "",
+            creator: item.creator || "",
+            is_active: item.is_active,
+            sys_date_time: item.sys_date_time,
+            updated_at: item.updated_at,
+          }))
+        : [];
+
+      setSpeedLossRecords(records);
+      setStatusCounts((prev) => ({
+        ...prev,
+        speedLoss: records.length,
+      }));
+      setError(null);
+    } catch (error) {
+      console.error("Error refreshing speed loss records:", error);
+      setError("Failed to refresh speed loss records.");
+    }
+  };
+
   return (
     <>
       {error && (
@@ -425,6 +524,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           icon={Zap}
           label="Speed Loss"
           count={statusCounts.speedLoss}
+          onClick={() => setShowSpeedLossRecordsModal(true)}
         />
         <StatusItem
           icon={Trash}
@@ -433,9 +533,9 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           onClick={() => setShowScrapRecordsModal(true)}
         />
         <StatusItem
-          icon={Mail}
-          label="Mail"
-          count={statusCounts.mail}
+          icon={Phone}
+          label="Contact Us"
+          onClick={()=> setShowContactUsModal(true)}
         />
       </div>
 
@@ -513,6 +613,32 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
           onSubmitSuccess={refreshScrapRecords}
         />
       )}
+
+      {showSpeedLossRecordsModal && (
+        <SpeedLossRecordsModal
+          speedLossRecords={speedLossRecords}
+          onAdd={() => {
+            setShowSpeedLossRecordsModal(false);
+            setShowSpeedLossFormModal(true);
+          }}
+          onClose={() => setShowSpeedLossRecordsModal(false)}
+          onUpdateSuccess={refreshSpeedLossRecords}
+        />
+      )}
+
+      {showSpeedLossFormModal && (
+        <SpeedLossModal
+          stations={stations}
+          shift={shift}
+          onClose={() => setShowSpeedLossFormModal(false)}
+          onSubmitSuccess={refreshSpeedLossRecords}
+        />
+      )}
+
+      {showContactUsModal && (
+        <ContactUsModal onClose={() => setShowContactUsModal(false)} />
+      )}
+
     </>
   );
 }
