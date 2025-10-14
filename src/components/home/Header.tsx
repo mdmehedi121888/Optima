@@ -23,14 +23,17 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
-  const currentDay = currentTime.toLocaleDateString("en-US", { weekday: "long" });
+  const currentDay = currentTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "Asia/Dhaka",
+  });
   const todayDate = currentTime.toLocaleDateString("en-US", {
     day: "2-digit",
     month: "2-digit",
+    timeZone: "Asia/Dhaka",
   }).split("/").reverse().join(".");
 
   const currentStation = availableStations[stationIndex] || "";
-
 
   // Fetch shifts when station or day changes
   useEffect(() => {
@@ -176,6 +179,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
             minute: "2-digit",
             second: "2-digit",
             hour12: false,
+            timeZone: "Asia/Dhaka",
           })}
         </div>
         <button className="p-1 hover:bg-gray-800 rounded">
