@@ -56,7 +56,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -103,7 +103,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
   const fetchSpeedLossReasons = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/speedLossReasons", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons`, {
         method: "GET",
         credentials: "include",
       });
@@ -156,8 +156,8 @@ const [user, setUser] = useState<UserType | null>(null);
       };
 
       const url = selectedSpeedLossReason
-        ? `http://localhost:5000/api/speedLossReasons/${selectedSpeedLossReason.id}`
-        : "http://localhost:5000/api/speedLossReasons";
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons/${selectedSpeedLossReason.id}`
+        : `${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons`;
       const method = selectedSpeedLossReason ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -221,7 +221,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
     if (confirmDelete.isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:5000/api/speedLossReasons/${selectedSpeedLossReason.id}`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons/${selectedSpeedLossReason.id}`, {
           method: "DELETE",
           credentials: "include",
         });

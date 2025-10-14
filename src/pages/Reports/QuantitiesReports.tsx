@@ -35,7 +35,7 @@ export default function QuantitiesReports() {
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/oee-metrics/getAll", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/oee-metrics/getAll`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);

@@ -7,7 +7,7 @@ const ProtectedRoute = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
           method: "GET",
           credentials: "include", // ✅ Important for session cookies
         });

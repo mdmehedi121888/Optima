@@ -54,7 +54,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -113,7 +113,7 @@ const [user, setUser] = useState<UserType | null>(null);
      const handleDeleteClick = async (record: ProductRecord) => {
        try {
          const response = await fetch(
-           `http://localhost:5000/api/products/record/${record.id}`,
+           `${process.env.REACT_APP_BACKEND_URL}/api/products/record/${record.id}`,
            {
              method: "DELETE",
            }
@@ -193,7 +193,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
        try {
          const response = await fetch(
-           `http://localhost:5000/api/products/record/${formData.id}`,
+           `${process.env.REACT_APP_BACKEND_URL}/api/products/record/${formData.id}`,
            {
              method: "PUT",
              headers: { "Content-Type": "application/json" },

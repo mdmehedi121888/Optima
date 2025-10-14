@@ -46,7 +46,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -76,7 +76,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/users", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users`, {
         method: "GET",
         credentials: "include",
       });
@@ -143,8 +143,8 @@ const [user, setUser] = useState<UserType | null>(null);
       };
 
       const url = selectedUser
-        ? `http://localhost:5000/api/users/${selectedUser.id}`
-        : "http://localhost:5000/api/users";
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/users/${selectedUser.id}`
+        : `${process.env.REACT_APP_BACKEND_URL}/api/users`;
       const method = selectedUser ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -208,7 +208,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
     if (confirmDelete.isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:5000/api/users/${selectedUser.id}`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/${selectedUser.id}`, {
           method: "DELETE",
         });
 

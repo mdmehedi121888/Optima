@@ -55,7 +55,7 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({
       useEffect(() => {
         const fetchUser = async () => {
           try {
-            const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
               credentials: 'include',
             });
             const data = await response.json();
@@ -75,7 +75,7 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({
   useEffect(() => {
     const fetchProblemGroups = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/downtimeProblem");
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem`);
         if (!response.ok) throw new Error("Failed to fetch problem groups");
         const data = await response.json();
         const groups = data.map((item: any) => item.problem_groups).filter(Boolean);
@@ -92,7 +92,7 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({
       if (formData.problem_group) {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/downtimeProblem/specific?problem=${formData.problem_group}`
+            `${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/specific?problem=${formData.problem_group}`
           );
           if (!response.ok) throw new Error("Failed to fetch problem reasons");
           const data = await response.json();
@@ -173,7 +173,7 @@ export const DowntimeModal: FC<DowntimeModalProps> = ({
 
     // console.log("Sending create request with payload:", payload);
     try {
-      const response = await fetch("http://localhost:5000/api/downtimeProblem/create", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

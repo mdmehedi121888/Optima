@@ -58,7 +58,7 @@ export default function ScrapReasons() {
       useEffect(() => {
         const fetchUser = async () => {
           try {
-            const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
               credentials: 'include',
             });
             const data = await response.json();
@@ -105,7 +105,7 @@ export default function ScrapReasons() {
 
   const fetchScrapReasons = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/scrapReasons", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons`, {
         method: "GET",
         credentials: "include",
       });
@@ -158,8 +158,8 @@ export default function ScrapReasons() {
       };
 
       const url = selectedScrapReason
-        ? `http://localhost:5000/api/scrapReasons/${selectedScrapReason.id}`
-        : "http://localhost:5000/api/scrapReasons";
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons/${selectedScrapReason.id}`
+        : `${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons`;
       const method = selectedScrapReason ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -223,7 +223,7 @@ export default function ScrapReasons() {
 
     if (confirmDelete.isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:5000/api/scrapReasons/${selectedScrapReason.id}`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons/${selectedScrapReason.id}`, {
           method: "DELETE",
           credentials: "include",
         });

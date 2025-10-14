@@ -45,7 +45,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -77,7 +77,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
   const fetchStations = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/stations", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/stations`, {
         method: "GET",
         credentials: "include",
       });
@@ -130,8 +130,8 @@ const [user, setUser] = useState<UserType | null>(null);
       };
 
       const url = selectedStation
-        ? `http://localhost:5000/api/stations/${selectedStation.id}`
-        : "http://localhost:5000/api/stations";
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/stations/${selectedStation.id}`
+        : `${process.env.REACT_APP_BACKEND_URL}/api/stations`;
       const method = selectedStation ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -195,7 +195,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
     if (confirmDelete.isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:5000/api/stations/${selectedStation.id}`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/stations/${selectedStation.id}`, {
           method: "DELETE",
         });
 

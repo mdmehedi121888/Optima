@@ -56,7 +56,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -89,7 +89,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/products", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products`, {
         method: "GET",
         credentials: "include",
       });
@@ -147,8 +147,8 @@ const [user, setUser] = useState<UserType | null>(null);
       };
 
       const url = selectedProduct
-        ? `http://localhost:5000/api/products/${selectedProduct.id}`
-        : "http://localhost:5000/api/products";
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/products/${selectedProduct.id}`
+        : `${process.env.REACT_APP_BACKEND_URL}/api/products`;
       const method = selectedProduct ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -222,7 +222,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
     if (confirmDelete.isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${selectedProduct.id}`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${selectedProduct.id}`, {
           method: "DELETE",
           credentials: "include",
         });

@@ -7,6 +7,7 @@ import { BatchInfo } from "../../components/home/BatchInfo";
 import { PerformanceChart } from "../../components/home/PerformanceChart";
 import { ProductionTimeline } from "../../components/home/ProductionTimeline";
 
+
 export interface Shift {
   id: number;
   shiftName: string;
@@ -35,7 +36,7 @@ export default function Page() {
   const fetchProductRecords = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/products/specificProductRecords?station=${encodeURIComponent(
+        `${process.env.REACT_APP_BACKEND_URL}/api/products/specificProductRecords?station=${encodeURIComponent(
           selectedStation
         )}&shift=${selectedShift?.shiftName}`
       );
@@ -63,7 +64,7 @@ export default function Page() {
       const productionDate = new Date().toISOString().split("T")[0];
 
       const response = await fetch(
-        `http://localhost:5000/api/oee-metrics/get/by-date?station=${encodeURIComponent(
+        `${process.env.REACT_APP_BACKEND_URL}/api/oee-metrics/get/by-date?station=${encodeURIComponent(
           selectedStation
         )}&productionDate=${productionDate}&shift=${selectedShift.shiftName}`,
         { credentials: "include" }

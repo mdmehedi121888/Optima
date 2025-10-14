@@ -35,7 +35,7 @@ export const ScrapModal: FC<ScrapModalProps> = ({
       useEffect(() => {
         const fetchUser = async () => {
           try {
-            const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
               credentials: 'include',
             });
             const data = await response.json();
@@ -67,7 +67,7 @@ export const ScrapModal: FC<ScrapModalProps> = ({
   useEffect(() => {
     const fetchScrapReasons = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/scrapReasons");
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons`);
         if (!response.ok) throw new Error("Failed to fetch scrap reasons");
         const data = await response.json();
         const reasons = data.map((item: any) => item.scrap_reason).filter(Boolean);
@@ -125,7 +125,7 @@ export const ScrapModal: FC<ScrapModalProps> = ({
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/scrapReasons/scrap", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons/scrap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

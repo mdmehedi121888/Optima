@@ -39,7 +39,7 @@ export function DashboardHeader({ onSelectionChange }: DashboardHeaderProps) {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/shifts/specific?stations=${encodeURIComponent(
+          `${process.env.REACT_APP_BACKEND_URL}/api/shifts/specific?stations=${encodeURIComponent(
             currentStation
           )}&days=${encodeURIComponent(currentDay)}`
         );

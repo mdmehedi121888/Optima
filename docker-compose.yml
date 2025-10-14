@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  optima-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: optima-frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - optima-frontend-network
+
+networks:
+  optima-frontend-network:
+    driver: bridge

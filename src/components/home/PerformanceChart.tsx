@@ -83,7 +83,7 @@ export function PerformanceChart({ station, shift }: PerformanceChartProps) {
 
         const productionDate = new Date().toISOString().split("T")[0]; // Current date in YYYY-MM-DD format
         const response = await fetch(
-          `http://localhost:5000/api/oee-metrics/get/by-date?station=${encodeURIComponent(station)}&productionDate=${productionDate}&shift=${shift}`,
+          `${process.env.REACT_APP_BACKEND_URL}/api/oee-metrics/get/by-date?station=${encodeURIComponent(station)}&productionDate=${productionDate}&shift=${shift}`,
           { credentials: "include" }
         );
 

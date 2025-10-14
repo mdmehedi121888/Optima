@@ -72,7 +72,7 @@ export default function FactoryOverview() {
   // Fetch available shifts
   const fetchShifts = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/shifts", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/shifts`, {
         credentials: "include",
       });
       if (!response.ok) {
@@ -130,7 +130,7 @@ export default function FactoryOverview() {
 
       for (const station of availableStations) {
         const response = await fetch(
-          `http://localhost:5000/api/oee-metrics/get/by-date?station=${encodeURIComponent(station)}&productionDate=${productionDate}&shift=${encodeURIComponent(selectedShift)}`,
+          `${process.env.REACT_APP_BACKEND_URL}/api/oee-metrics/get/by-date?station=${encodeURIComponent(station)}&productionDate=${productionDate}&shift=${encodeURIComponent(selectedShift)}`,
           { credentials: "include" }
         );
         if (!response.ok) {
@@ -163,7 +163,7 @@ export default function FactoryOverview() {
   // Fetch station status
   const fetchStationStatus = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/stationStatus`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/stationStatus`, {
         credentials: "include",
       });
       if (!response.ok) {

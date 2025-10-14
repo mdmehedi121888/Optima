@@ -17,7 +17,7 @@ const contacts: Contact[] = [
   {
     id: "66708",
     name: "Md. Mehedi Hasan",
-    phone: "01608989281",
+    phone: "01608985281",
     image: "https://hrms.waltonbd.com/images/repository/HrIrAplc/PIC_/104606~00bd50b5-414e-49d7-8b34-24a6245ead05.png",
   },
   {

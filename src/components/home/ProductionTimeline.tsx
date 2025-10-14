@@ -98,7 +98,7 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
       useEffect(() => {
         const fetchUser = async () => {
           try {
-            const response = await fetch('http://localhost:5000/api/auth/check-session', {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
               credentials: 'include',
             });
             const data = await response.json();
@@ -145,7 +145,7 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
         endTime: shift?.endTime,
       };
 
-      const url = "http://localhost:5000/api/machineData";
+      const url = `${process.env.REACT_APP_BACKEND_URL}/api/machineData`;
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -170,7 +170,7 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
     try {
       if (!station || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/downtimeProblem/specificDowntimeRecords?station=${station}&shift=${shift.shiftName}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/specificDowntimeRecords?station=${station}&shift=${shift.shiftName}`
       );
       if (!response.ok) throw new Error("Failed to fetch downtime records");
       const data = await response.json();
@@ -197,7 +197,7 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
     try {
       if (!station || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/products/specificProductRecords?station=${encodeURIComponent(station)}&shift=${shift.shiftName}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/products/specificProductRecords?station=${encodeURIComponent(station)}&shift=${shift.shiftName}`
       );
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
@@ -237,7 +237,7 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
       if (!station || !shift?.shiftName) return;
       const productionDate = new Date().toISOString().split("T")[0]; // Current date in YYYY-MM-DD format
       const response = await fetch(
-        `http://localhost:5000/api/oee-metrics/get/by-date?station=${encodeURIComponent(station)}&productionDate=${productionDate}&shift=${shift.shiftName}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/oee-metrics/get/by-date?station=${encodeURIComponent(station)}&productionDate=${productionDate}&shift=${shift.shiftName}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
@@ -264,7 +264,7 @@ export function ProductionTimeline({ station, shift }: ProductionTimelineProps) 
   //       creator,
   //     };
 
-  //     const response = await fetch("http://localhost:5000/api/oee-metrics/post", {
+  //     const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/oee-metrics/post`, {
   //       method: "POST",
   //       headers: {
   //         "Content-Type": "application/json",

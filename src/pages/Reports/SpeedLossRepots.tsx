@@ -33,7 +33,7 @@ export default function SpeedLossReports() {
       try {
         setLoading(true);
         const response = await fetch(
-          "http://localhost:5000/api/speedLossReasons/allSpeedLossRecords",
+          `${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons/allSpeedLossRecords`,
           {
             method: "GET",
             credentials: "include",

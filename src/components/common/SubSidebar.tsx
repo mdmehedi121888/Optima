@@ -12,7 +12,7 @@ export default function SubSidebar() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/check-session", {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
           credentials: "include",
         });
         if (!response.ok) {

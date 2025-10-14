@@ -52,7 +52,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -72,7 +72,7 @@ const [user, setUser] = useState<UserType | null>(null);
   useEffect(() => {
     const fetchScrapReasons = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/scrapReasons");
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons`);
         if (!response.ok) throw new Error("Failed to fetch scrap reasons");
         const data = await response.json();
         const reasons = data.map((item: any) => item.scrap_reason).filter(Boolean);
@@ -120,7 +120,7 @@ const [user, setUser] = useState<UserType | null>(null);
   const handleDeleteClick = async (record: ScrapFormData) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/scrapReasons/scrap/${record.id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons/scrap/${record.id}`,
         {
           method: "DELETE",
         }
@@ -198,7 +198,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/scrapReasons/scrap/${formData.id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons/scrap/${formData.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

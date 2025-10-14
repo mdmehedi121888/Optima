@@ -66,7 +66,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -114,7 +114,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
   const fetchShifts = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/shifts", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/shifts`, {
         method: "GET",
         credentials: "include",
       });
@@ -174,8 +174,8 @@ const [user, setUser] = useState<UserType | null>(null);
       };
 
       const url = selectedShift
-        ? `http://localhost:5000/api/shifts/${selectedShift.id}`
-        : "http://localhost:5000/api/shifts";
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/shifts/${selectedShift.id}`
+        : `${process.env.REACT_APP_BACKEND_URL}/api/shifts`;
       const method = selectedShift ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -249,7 +249,7 @@ const [user, setUser] = useState<UserType | null>(null);
 
     if (confirmDelete.isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:5000/api/shifts/${selectedShift.id}`, {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/shifts/${selectedShift.id}`, {
           method: "DELETE",
           credentials: "include",
         });

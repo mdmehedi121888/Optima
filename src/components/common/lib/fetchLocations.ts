@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/locations";
+const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api/locations`;
 
 // Define the shape of each item in the API response
 interface LocationData {

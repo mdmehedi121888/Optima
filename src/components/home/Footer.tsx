@@ -125,7 +125,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
       try {
         if (!stations || !shift?.shiftName) return;
         const response = await fetch(
-          `http://localhost:5000/api/operators/specific?stations=${stations}&shift=${shift.shiftName}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/operators/specific?stations=${stations}&shift=${shift.shiftName}`
         );
         if (!response.ok) throw new Error("Failed to fetch operators");
         const data = await response.json();
@@ -162,7 +162,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
       try {
         if (!stations || !shift?.shiftName) return;
         const response = await fetch(
-          `http://localhost:5000/api/downtimeProblem/specificDowntimeRecords?station=${stations}&shift=${shift.shiftName}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/specificDowntimeRecords?station=${stations}&shift=${shift.shiftName}`
         );
         if (!response.ok) throw new Error("Failed to fetch downtime records");
         const data = await response.json();
@@ -199,7 +199,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
       try {
         if (!stations || !shift?.shiftName) return;
         const response = await fetch(
-          `http://localhost:5000/api/products/specificProductRecords?station=${stations}&shift=${shift.shiftName}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/products/specificProductRecords?station=${stations}&shift=${shift.shiftName}`
         );
         if (!response.ok) throw new Error("Failed to fetch product records");
         const data = await response.json();
@@ -236,7 +236,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
       try {
         if (!stations || !shift?.shiftName) return;
         const response = await fetch(
-          `http://localhost:5000/api/scrapReasons/scrap?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons/scrap?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
         );
         if (!response.ok) throw new Error("Failed to fetch scrap records");
         const data = await response.json();
@@ -279,7 +279,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
       try {
         if (!stations || !shift?.shiftName) return;
         const response = await fetch(
-          `http://localhost:5000/api/speedLossReasons/speedLossRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons/speedLossRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
         );
         if (!response.ok) throw new Error("Failed to fetch speed loss records");
         const data = await response.json();
@@ -320,7 +320,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     const fetchProducts = async () => {
       try {
         if (!stations) return;
-        const response = await fetch(`http://localhost:5000/api/products/specific?stations=${encodeURIComponent(stations)}`);
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/specific?stations=${encodeURIComponent(stations)}`);
         if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
 
@@ -351,7 +351,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     try {
       if (!stations || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/downtimeProblem/specificDowntimeRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/specificDowntimeRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
       );
       if (!response.ok) throw new Error("Failed to refresh downtime records");
       const data = await response.json();
@@ -384,7 +384,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     try {
       if (!stations || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/products/specificProductRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/products/specificProductRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
       );
       if (!response.ok) throw new Error("Failed to refresh product records");
       const data = await response.json();
@@ -417,7 +417,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     try {
       if (!stations || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/scrapReasons/scrap?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/scrapReasons/scrap?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
       );
       if (!response.ok) throw new Error("Failed to refresh scrap records");
       const data = await response.json();
@@ -456,7 +456,7 @@ export function StatusBar({ stations, shift }: { stations: string; shift: Shift 
     try {
       if (!stations || !shift?.shiftName) return;
       const response = await fetch(
-        `http://localhost:5000/api/speedLossReasons/speedLossRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons/speedLossRecords?station=${encodeURIComponent(stations)}&shift=${encodeURIComponent(shift.shiftName)}`
       );
       if (!response.ok) throw new Error("Failed to refresh speed loss records");
       const data = await response.json();

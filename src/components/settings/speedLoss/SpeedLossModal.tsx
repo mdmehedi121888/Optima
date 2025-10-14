@@ -33,7 +33,7 @@ export const SpeedLossModal: FC<SpeedLossModalProps> = ({
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/auth/check-session', {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
           credentials: 'include',
         });
         const data = await response.json();
@@ -64,7 +64,7 @@ export const SpeedLossModal: FC<SpeedLossModalProps> = ({
   useEffect(() => {
     const fetchSpeedLossReasons = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/speedLossReasons");
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons`);
         if (!response.ok) throw new Error("Failed to fetch speed loss reasons");
         const data = await response.json();
         const reasons = data.map((item: any) => item.speed_loss_reason).filter(Boolean);
@@ -120,7 +120,7 @@ export const SpeedLossModal: FC<SpeedLossModalProps> = ({
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/speedLossReasons/speedLossRecords", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/speedLossReasons/speedLossRecords`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

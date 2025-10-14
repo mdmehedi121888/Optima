@@ -57,7 +57,7 @@ const [user, setUser] = useState<UserType | null>(null);
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/check-session', {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/check-session`, {
             credentials: 'include',
           });
           const data = await response.json();
@@ -77,7 +77,7 @@ const [user, setUser] = useState<UserType | null>(null);
   useEffect(() => {
     const fetchProblemGroups = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/downtimeProblem");
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem`);
         if (!response.ok) throw new Error("Failed to fetch problem groups");
         const data = await response.json();
         const groups = data.map((item: any) => item.problem_groups).filter(Boolean);
@@ -94,7 +94,7 @@ const [user, setUser] = useState<UserType | null>(null);
       if (formData.problem_group) {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/downtimeProblem/specific?problem=${formData.problem_group}`
+            `${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/specific?problem=${formData.problem_group}`
           );
           if (!response.ok) throw new Error("Failed to fetch problem reasons");
           const data = await response.json();
@@ -141,7 +141,7 @@ const [user, setUser] = useState<UserType | null>(null);
   const handleDeleteClick = async (record: DowntimeFormData) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/downtimeProblem/delete/${record.id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/delete/${record.id}`,
         {
           method: "DELETE",
         }
@@ -217,10 +217,10 @@ const [user, setUser] = useState<UserType | null>(null);
       creator: creator,
     };
 
-    // console.log("Sending update request with formData:", formData);
+    // console.log("Sending update request with formData:", payload);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/downtimeProblem/update/${formData.id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/downtimeProblem/update/${formData.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
